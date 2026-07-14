@@ -1,0 +1,5 @@
+package com.eduedge.eduedge
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

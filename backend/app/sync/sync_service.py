@@ -21,7 +21,9 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.config.settings import settings
 from app.database.postgres import PostgresSessionLocal
 from app.database.session import SQLiteSessionLocal
+from app.models.progress import Progress
 from app.models.user import User
+from app.repositories.progress_repository import ProgressRepository
 from app.repositories.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,56 @@ def sync_users_once() -> int:
         postgres_db.close()
 
 
+def sync_progress_once() -> int:
+    """Same pattern as sync_users_once, for the Progress table —
+    pushes unsynced rows into Postgres, upserted on id (progress rows
+    are created once per attempt and never edited afterwards, so id
+    is a safe conflict key, unlike User's email)."""
+    sqlite_db = SQLiteSessionLocal()
+    postgres_db = PostgresSessionLocal()
+    synced_count = 0
+    try:
+        repo = ProgressRepository(sqlite_db)
+        pending = repo.get_unsynced()
+
+        for progress in pending:
+            stmt = pg_insert(Progress).values(
+                id=progress.id,
+                user_id=progress.user_id,
+                chapter_id=progress.chapter_id,
+                chunk_id=progress.chunk_id,
+                status=progress.status,
+                score=progress.score,
+                is_synced=True,
+                created_at=progress.created_at,
+                updated_at=progress.updated_at,
+            )
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_={
+                    "status": stmt.excluded.status,
+                    "score": stmt.excluded.score,
+                    "updated_at": stmt.excluded.updated_at,
+                },
+            )
+            postgres_db.execute(stmt)
+            repo.mark_synced(progress)
+            synced_count += 1
+
+        postgres_db.commit()
+        if synced_count:
+            logger.info("Synced %d progress row(s) to PostgreSQL", synced_count)
+        return synced_count
+
+    except Exception:
+        postgres_db.rollback()
+        logger.warning("Progress sync to PostgreSQL failed this cycle", exc_info=True)
+        return 0
+    finally:
+        sqlite_db.close()
+        postgres_db.close()
+
+
 async def sync_loop() -> None:
     """Started once at app startup (see main.py). Runs for the life of
     the process, syncing on a fixed interval. Uses asyncio.to_thread
@@ -90,3 +142,4 @@ async def sync_loop() -> None:
     while True:
         await asyncio.sleep(settings.sync_interval_seconds)
         await asyncio.to_thread(sync_users_once)
+        await asyncio.to_thread(sync_progress_once)

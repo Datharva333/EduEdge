@@ -19,6 +19,9 @@ class UserRepository:
     def get_by_email(self, email: str) -> User | None:
         return self.db.scalar(select(User).where(User.email == email))
 
+    def get_by_id(self, user_id: str) -> User | None:
+        return self.db.scalar(select(User).where(User.id == user_id))
+
     def create(self, user: User) -> User:
         self.db.add(user)
         self.db.commit()

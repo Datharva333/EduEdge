@@ -17,7 +17,7 @@ from app.core.constants import API_V1_PREFIX
 from app.core.logging_config import configure_logging
 from app.database.postgres import init_postgres
 from app.database.session import init_sqlite
-from app.routers import auth
+from app.routers import auth, content_packs, progress, sync
 from app.sync.sync_service import sync_loop
 
 configure_logging()
@@ -54,3 +54,6 @@ def health_check() -> dict[str, str]:
 
 
 app.include_router(auth.router, prefix=f"{API_V1_PREFIX}/auth", tags=["Auth"])
+app.include_router(content_packs.router, prefix=f"{API_V1_PREFIX}/content-packs", tags=["Content Packs"])
+app.include_router(progress.router, prefix=f"{API_V1_PREFIX}/progress", tags=["Progress"])
+app.include_router(sync.router, prefix=f"{API_V1_PREFIX}/sync", tags=["Sync"])

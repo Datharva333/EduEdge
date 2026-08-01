@@ -7,8 +7,10 @@ this, on its background interval. Keeping this boundary strict is
 what keeps API latency independent of Postgres being reachable at all.
 """
 
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.config.settings import settings
 from app.database.base import Base
@@ -16,6 +18,18 @@ from app.database.base import Base
 postgres_engine = create_engine(settings.postgres_database_url, pool_pre_ping=True)
 
 PostgresSessionLocal = sessionmaker(bind=postgres_engine, autocommit=False, autoflush=False)
+
+
+def get_postgres_db() -> Generator[Session, None, None]:
+    """FastAPI dependency for the small set of routes that read/write
+    Postgres directly — content packs only (see content_pack_repository.py
+    docstring for why this table is the one exception to the
+    SQLite-primary rule the rest of the app follows)."""
+    db = PostgresSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def init_postgres() -> None:

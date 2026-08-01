@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     sync_enabled: bool = True
     sync_interval_seconds: int = 30
 
+    # Base URL of the teammate's AI engine FastAPI service (separate
+    # repo/process — see app/ai_bridge/client.py). e.g. http://localhost:8001
+    # in local dev, an internal service URL once both are deployed.
+    ai_engine_base_url: str = "http://localhost:8001"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

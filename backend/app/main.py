@@ -12,12 +12,13 @@ import asyncio
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.constants import API_V1_PREFIX
 from app.core.logging_config import configure_logging
 from app.database.postgres import init_postgres
 from app.database.session import init_sqlite
-from app.routers import auth, content_packs, progress, sync
+from app.routers import auth, content_packs, frontend_bridge, progress, sync
 from app.sync.sync_service import sync_loop
 
 configure_logging()
@@ -27,6 +28,17 @@ app = FastAPI(
     title="EduEdge AI Backend",
     description="Backend API for EduEdge AI — offline-first AI learning platform.",
     version="1.0.0",
+)
+
+# Dev-only: wide open so the Flutter app (emulator or a real device on
+# the same Wi-Fi) can reach every route without CORS getting in the
+# way. Lock this down to real origins before any public deployment.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -57,3 +69,9 @@ app.include_router(auth.router, prefix=f"{API_V1_PREFIX}/auth", tags=["Auth"])
 app.include_router(content_packs.router, prefix=f"{API_V1_PREFIX}/content-packs", tags=["Content Packs"])
 app.include_router(progress.router, prefix=f"{API_V1_PREFIX}/progress", tags=["Progress"])
 app.include_router(sync.router, prefix=f"{API_V1_PREFIX}/sync", tags=["Sync"])
+
+# Unprefixed routes matching the frontend's current demo contract
+# (GET /lessons, POST /auth/login, POST /ai/summarize) — see
+# routers/frontend_bridge.py for why these are kept separate from the
+# real /api/v1 routes above.
+app.include_router(frontend_bridge.router, tags=["Frontend Bridge (temporary)"])

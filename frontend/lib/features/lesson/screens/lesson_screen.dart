@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../services/mock_service.dart';
+import '../../../services/api_service.dart';
 
 class LessonScreen extends StatelessWidget {
   final String lessonId;
@@ -12,7 +13,6 @@ class LessonScreen extends StatelessWidget {
       (l) => l['id'] == lessonId,
       orElse: () => MockService.lessons.first,
     );
-
     return Scaffold(
       appBar: AppBar(title: Text(lesson['subject'])),
       body: ListView(
@@ -33,7 +33,7 @@ class LessonScreen extends StatelessWidget {
           FilledButton.icon(
             icon: const Icon(Icons.auto_awesome),
             label: const Text('Summarize with AI'),
-            onPressed: () => context.push('/ai'),
+            onPressed: () => context.push('/ai/${lesson['id']}'),
           ),
         ],
       ),

@@ -17,6 +17,11 @@ class AppRouter {
             LessonScreen(lessonId: state.pathParameters['id'] ?? '1'),
       ),
       GoRoute(path: '/ai', builder: (_, __) => const AiScreen()),
+      GoRoute(
+        path: '/ai/:lessonId',
+        builder: (_, state) =>
+            AiScreen(lessonId: state.pathParameters['lessonId']),
+      ),
       GoRoute(path: '/progress', builder: (_, __) => const ProgressScreen()),
     ],
   );

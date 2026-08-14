@@ -43,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().userName;
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Hi, $user 👋'),
@@ -86,6 +88,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Expanded(
                       child: _ActionTile(
+                        icon: Icons.auto_awesome,
+                        label: 'AI Tools',
+                        color: scheme.primary,
+                        onTap: () => context.push('/ai'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionTile(
                         icon: Icons.offline_bolt,
                         label: _offline ? 'Offline' : 'Online',
                         color: _offline ? Colors.orange : Colors.teal,
@@ -101,15 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _ActionTile(
-                        icon: Icons.offline_bolt,
-                        label: 'Offline',
-                        color: Colors.teal,
-                        onTap: () {},
                       ),
                     ),
                   ],
@@ -134,6 +136,7 @@ class _ActionTile extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
+
   const _ActionTile({
     required this.icon,
     required this.label,

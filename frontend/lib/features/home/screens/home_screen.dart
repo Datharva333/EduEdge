@@ -67,38 +67,60 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.orange.shade200),
                     ),
-                    child: const Row(children: [
-                      Icon(Icons.offline_bolt, color: Colors.orange, size: 16),
-                      SizedBox(width: 8),
-                      Text('Offline mode - showing cached lessons',
-                          style: TextStyle(fontSize: 13)),
-                    ]),
-                  ),
-                Row(children: [
-                  Expanded(
-                    child: _ActionTile(
-                      icon: Icons.auto_awesome,
-                      label: 'AI Tools',
-                      color: Theme.of(context).colorScheme.primary,
-                      onTap: () => context.push('/ai'),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.offline_bolt,
+                          color: Colors.orange,
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Offline mode - showing cached lessons',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _ActionTile(
-                      icon: Icons.offline_bolt,
-                      label: 'Offline',
-                      color: Colors.teal,
-                      onTap: () {},
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActionTile(
+                        icon: Icons.offline_bolt,
+                        label: _offline ? 'Offline' : 'Online',
+                        color: _offline ? Colors.orange : Colors.teal,
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                _offline
+                                    ? 'You are offline. Showing cached lessons.'
+                                    : 'You are online. All features available.',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionTile(
+                        icon: Icons.offline_bolt,
+                        label: 'Offline',
+                        color: Colors.teal,
+                        onTap: () {},
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 24),
-                Text('Your Lessons',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Your Lessons',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 ..._lessons.map((l) => _LessonCard(lesson: l)),
               ],
@@ -112,7 +134,12 @@ class _ActionTile extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _ActionTile({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -122,11 +149,13 @@ class _ActionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Row(children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          ]),
+          child: Row(
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+            ],
+          ),
         ),
       ),
     );
@@ -144,8 +173,10 @@ class _LessonCard extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(child: Text(lesson['icon'])),
-        title: Text(lesson['title'],
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          lesson['title'],
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(lesson['subject']),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () => context.push('/lesson/${lesson['id']}'),

@@ -53,7 +53,7 @@ class _AiScreenState extends State<AiScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('AI Tools')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,38 +106,34 @@ class _AiScreenState extends State<AiScreen> {
             const SizedBox(height: 24),
             if (_loading) const Center(child: CircularProgressIndicator()),
             if (_summary != null && !_loading)
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.auto_awesome, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              'AI Summary',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                        const Icon(Icons.auto_awesome, size: 16),
+                        const SizedBox(width: 6),
                         Text(
-                          _summary!,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(height: 1.6),
+                          'AI Summary',
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _summary!,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(height: 1.6),
+                    ),
+                  ],
                 ),
               ),
           ],

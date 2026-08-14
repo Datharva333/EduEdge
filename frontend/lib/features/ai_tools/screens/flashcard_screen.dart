@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/mock_service.dart';
+import '../../../../services/mock_service.dart';
 
 class FlashcardScreen extends StatefulWidget {
   final String lessonId;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/mock_service.dart';
+import '../../../../services/mock_service.dart';
 
 class MindMapScreen extends StatelessWidget {
   final String lessonId;
@@ -171,4 +171,8 @@ class MindMapScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+extension on MapEntry<int, String> {
+  get index => null;
 }

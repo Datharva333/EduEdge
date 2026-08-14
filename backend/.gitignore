@@ -42,6 +42,8 @@ uploads/
 .DS_Store
 Thumbs.db
 
-# ── Logs ─────────────────────────────────────────────
+# --- Logs ---
 *.log
-server.log
+bvenv/
+ 
+ 

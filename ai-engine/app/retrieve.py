@@ -1,4 +1,4 @@
-## retrieval logic"""Querying the vector collection."""
+"""Querying the vector collection."""
 
 from app.config import N_RESULTS
 from app.embed import get_vector_collection

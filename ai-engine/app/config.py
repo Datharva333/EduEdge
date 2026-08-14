@@ -36,3 +36,18 @@ N_CTX = 4096
 N_THREADS = 8
 N_GPU_LAYERS = 0  # set to 0 to force CPU-only
 MAX_TOKENS = 1024
+
+# --- Semantic chunking (children) ---
+MIN_CHUNK_TOKENS = 60          # merge forward if a candidate child is smaller than this
+MAX_CHUNK_TOKENS = 250         # force-split if a coherent run exceeds this
+BREAKPOINT_PERCENTILE = 80     # distance percentile above which a sentence gap = topic shift
+WINDOW_SIZE = 1                # sentences of context on each side when embedding for breakpoint detection
+
+# --- Parent store (full section/subsection text, looked up post-rerank) ---
+PARENT_STORE_PATH = "./parent_store.db"
+
+# --- content-type-aware chunking ---
+# worked_example / formula blocks are never semantically split; this is
+# only a last-resort fallback (blank-line paragraph split, no breakpoint
+# detection) for the rare block that's unusually long.
+NON_SEMANTIC_HARD_CAP_TOKENS = 500

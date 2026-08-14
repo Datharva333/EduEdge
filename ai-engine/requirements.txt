@@ -6,3 +6,5 @@ langchain-community
 langchain-text-splitters
 langchain-core
 llama-cpp-python
+blingfire==0.1.8
+indic-nlp-library

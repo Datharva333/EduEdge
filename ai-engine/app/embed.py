@@ -1,3 +1,57 @@
+# """Vector store setup and ingestion (local sentence-transformers embeddings + ChromaDB)."""
+
+# from typing import List, Optional
+# from chromadb import EmbeddingFunction
+# import chromadb
+# import streamlit as st
+# from langchain_core.documents import Document
+# from sentence_transformers import SentenceTransformer
+
+# from app.config import CHROMA_PATH, COLLECTION_NAME, EMBED_MODEL_PATH
+
+# _embed_model: Optional[SentenceTransformer] = None
+
+
+# def _get_embed_model() -> SentenceTransformer:
+#     """Lazily loads and caches the embedding model. Loaded once per process."""
+#     global _embed_model
+#     if _embed_model is None:
+#         _embed_model = SentenceTransformer(EMBED_MODEL_PATH)
+#     return _embed_model
+
+
+# class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
+#     """ChromaDB-compatible embedding function backed by sentence-transformers.
+
+#     Newer chromadb versions (1.x) require embedding functions to formally
+#     subclass `chromadb.EmbeddingFunction` and implement `name()` --
+#     otherwise `get_or_create_collection` raises
+#     `AttributeError: ... object has no attribute 'name'`. `get_config()` /
+#     `build_from_config()` are also implemented so Chroma can serialize this
+#     embedding function's identity alongside the collection.
+#     """
+
+#     def __init__(self):
+#         # Deliberately not calling super().__init__() -- the base class's
+#         # default __init__ only emits a deprecation warning.
+#         pass
+
+#     def __call__(self, input: List[str]) -> List[List[float]]:
+#         model = _get_embed_model()
+#         embeddings = model.encode(input, convert_to_numpy=True)
+#         return embeddings.tolist()
+
+#     @staticmethod
+#     def name() -> str:
+#         return "sentence-transformers-local"
+
+#     def get_config(self) -> dict:
+#         return {"model_path": EMBED_MODEL_PATH}
+
+#     @staticmethod
+#     def build_from_config(config: dict) -> "SentenceTransformerEmbeddingFunction":
+#         return SentenceTransformerEmbeddingFunction()
+
 """Vector store setup and ingestion (local sentence-transformers embeddings + ChromaDB)."""
 
 from typing import List, Optional

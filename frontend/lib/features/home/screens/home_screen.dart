@@ -13,31 +13,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, dynamic>> _lessons = [];
   bool _loading = true;
   bool _offline = false;
+  String _selectedSubject = 'All';
 
   @override
   void initState() {
     super.initState();
-    _loadLessons();
+    _checkBackend();
   }
 
-  Future<void> _loadLessons() async {
-    final lessons = await ApiService.getLessons();
-    if (lessons.isEmpty) {
-      setState(() {
-        _lessons = MockService.lessons;
-        _offline = true;
-        _loading = false;
-      });
-    } else {
-      setState(() {
-        _lessons = lessons;
-        _offline = false;
-        _loading = false;
-      });
-    }
+  Future<void> _checkBackend() async {
+    final online = await ApiService.isBackendUp();
+    setState(() {
+      _offline = !online;
+      _loading = false;
+    });
+  }
+
+  List<Map<String, dynamic>> get _filteredLessons {
+    if (_selectedSubject == 'All') return MockService.lessons;
+    return MockService.getLessonsBySubject(_selectedSubject);
   }
 
   @override
@@ -52,6 +48,13 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.bar_chart_rounded),
             onPressed: () => context.push('/progress'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) context.go('/login');
+            },
           ),
         ],
       ),
@@ -89,9 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: _ActionTile(
                         icon: Icons.auto_awesome,
-                        label: 'AI Tools',
+                        label: 'AI Hub',
                         color: scheme.primary,
-                        onTap: () => context.push('/ai'),
+                        onTap: () => context.push('/aihub'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -105,8 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             SnackBar(
                               content: Text(
                                 _offline
-                                    ? 'You are offline. Showing cached lessons.'
-                                    : 'You are online. All features available.',
+                                    ? 'Offline mode - showing cached lessons'
+                                    : 'You are online',
                               ),
                               duration: const Duration(seconds: 2),
                             ),
@@ -118,15 +121,80 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Your Lessons',
+                  'Subjects',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
-                ..._lessons.map((l) => _LessonCard(lesson: l)),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _SubjectChip(
+                        label: 'All',
+                        selected: _selectedSubject == 'All',
+                        onTap: () => setState(() => _selectedSubject = 'All'),
+                      ),
+                      ...MockService.subjects.map(
+                        (s) => _SubjectChip(
+                          label: '${s['icon']} ${s['name']}',
+                          selected: _selectedSubject == s['name'],
+                          onTap: () =>
+                              setState(() => _selectedSubject = s['name']),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${_filteredLessons.length} Lessons',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ..._filteredLessons.map((l) => _LessonCard(lesson: l)),
               ],
             ),
+    );
+  }
+}
+
+class _SubjectChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SubjectChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? scheme.primary : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.grey.shade700,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -175,12 +243,14 @@ class _LessonCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(child: Text(lesson['icon'])),
+        leading: CircleAvatar(
+          child: Text(lesson['icon'], style: const TextStyle(fontSize: 18)),
+        ),
         title: Text(
           lesson['title'],
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(lesson['subject']),
+        subtitle: Text('${lesson['subject']} • Class ${lesson['class']}'),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () => context.push('/lesson/${lesson['id']}'),
       ),

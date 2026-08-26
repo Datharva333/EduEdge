@@ -176,7 +176,12 @@ class _AiHubScreenState extends State<AiHubScreen> {
                         children: [
                           Text(l['icon'], style: const TextStyle(fontSize: 18)),
                           const SizedBox(width: 8),
-                          Text(l['title']),
+                          Flexible(
+                            child: Text(
+                              '${l['title']} (Class ${l['class']})',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),

@@ -28,7 +28,7 @@ def get_chat_llm() -> Llama:
     return _chat_llm
 
 
-def call_llm(context: str, prompt: str):
+def call_llm(context: str, prompt: str, system: str | None = None):
     """Streams a response from the local chat model given context and a question.
 
     Uses `create_chat_completion(..., stream=True)` with proper system/user
@@ -38,6 +38,10 @@ def call_llm(context: str, prompt: str):
     Args:
         context: String containing the relevant context for answering the question.
         prompt: String containing the user's question.
+        system: Optional system prompt override. Defaults to the QA
+            `system_prompt` from app.prompts -- pass `quiz_system_prompt`
+            (or any other) to reuse this same call/stream plumbing for a
+            different task, e.g. quiz generation.
 
     Yields:
         String chunks of the generated response as they become available.
@@ -48,7 +52,7 @@ def call_llm(context: str, prompt: str):
     llm = get_chat_llm()
     stream = llm.create_chat_completion(
         messages=[
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": system or system_prompt},
             {"role": "user", "content": f"Context: {context}, Question: {prompt}"},
         ],
         stream=True,

@@ -6,6 +6,8 @@ Run with: uvicorn api:app --reload --port 8001
 """
 
 import hashlib
+import json
+import logging
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -13,8 +15,13 @@ from pydantic import BaseModel
 from app.chunk import chunk_raw_text
 from app.config import EMBED_MODEL_PATH
 from app.embed import get_embed_model
+from app.llm import call_llm
+from app.prompts import quiz_system_prompt
+from app.rag import re_rank_cross_encoders, resolve_parent_context
+from app.retrieve import query_collection
 
 app = FastAPI(title="EduEdge AI Engine")
+logger = logging.getLogger(__name__)
 
 
 # ── /chunk ──────────────────────────────────────────────────────────
@@ -127,6 +134,92 @@ class TranslateResponse(BaseModel):
 @app.post("/translate", response_model=TranslateResponse)
 def translate_endpoint(req: TranslateRequest) -> TranslateResponse:
     raise HTTPException(status_code=501, detail="Translation not implemented yet.")
+
+
+def _retrieve_context(query: str, lesson_id: str | None = None) -> str:
+    """Runs the existing retrieval -> rerank -> parent-resolution pipeline.
+
+    TODO: `lesson_id` is currently unused -- Chroma metadata (see
+    app/json_loader.py) only carries `subject`/`chapter`/`section`/
+    `subsection` (free-text titles from the ingestion JSON), not an ID
+    matching the backend's ContentPack/Chapter primary keys. Until
+    ingestion writes a matching chapter/lesson ID into metadata, this
+    searches the whole collection rather than scoping to one lesson.
+
+    Raises:
+        HTTPException: 404 if nothing relevant is found in the collection.
+    """
+    results = query_collection(query)
+    documents = results.get("documents", [[]])[0]
+    metadatas = results.get("metadatas", [[]])[0]
+
+    if not documents:
+        raise HTTPException(status_code=404, detail="No content found to answer from.")
+
+    reranked_ids = re_rank_cross_encoders(query, documents)
+    context, _parent_ids = resolve_parent_context(reranked_ids, metadatas)
+    return context
+
+
+# ── /ai/chat ────────────────────────────────────────────────────────
+class ChatRequest(BaseModel):
+    message: str
+    lessonId: str | None = None
+
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
+@app.post("/ai/chat", response_model=ChatResponse)
+def chat_endpoint(req: ChatRequest) -> ChatResponse:
+    context = _retrieve_context(req.message, req.lessonId)
+    reply = "".join(call_llm(context=context, prompt=req.message))
+    return ChatResponse(reply=reply)
+
+
+# ── /ai/quiz ────────────────────────────────────────────────────────
+class QuizRequest(BaseModel):
+    lessonId: str
+    num_questions: int = 5
+
+
+class QuizQuestion(BaseModel):
+    question: str
+    options: list[str]
+    correct_index: int
+
+
+class QuizResponse(BaseModel):
+    questions: list[QuizQuestion]
+
+
+@app.post("/ai/quiz", response_model=QuizResponse)
+def quiz_endpoint(req: QuizRequest) -> QuizResponse:
+    # No free-text query to retrieve against here -- lessonId names the
+    # whole lesson, not a specific question. Until retrieval can filter
+    # by lesson (see _retrieve_context's TODO), this uses a generic query
+    # that pulls broadly representative content back from the collection.
+    context = _retrieve_context(
+        query=f"Key concepts and facts covered in this lesson (id: {req.lessonId})",
+        lesson_id=req.lessonId,
+    )
+
+    raw = "".join(call_llm(
+        context=context,
+        prompt=f"Generate {req.num_questions} quiz questions.",
+        system=quiz_system_prompt,
+    ))
+
+    try:
+        parsed = json.loads(raw)
+        return QuizResponse(**parsed)
+    except (json.JSONDecodeError, TypeError, ValueError) as e:
+        logger.error("Quiz generation returned unparseable output: %s", raw)
+        raise HTTPException(
+            status_code=502,
+            detail="Quiz generation failed to produce valid JSON.",
+        ) from e
 
 
 @app.get("/health")

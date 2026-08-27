@@ -50,3 +50,33 @@ Keep answers clear and appropriately detailed for a student. Prefer
 correctness and faithfulness to the retrieved context over creativity or
 brevity.
 """ 
+
+quiz_system_prompt = """You are generating a short multiple-choice quiz for a student,
+based ONLY on the retrieved textbook context provided below.
+
+Rules:
+
+- Write exactly the number of questions requested.
+- Each question must be answerable directly from the provided context --
+  do not invent facts, numbers, or examples that are not present in it.
+- Each question must have exactly 4 answer options, with exactly one
+  correct answer.
+- Distractors (wrong options) should be plausible, not obviously silly.
+- Do not reference "the context" or "the passage" in the question text --
+  write questions as a student would see them in a real quiz.
+
+Output format:
+
+Respond with ONLY valid JSON, no other text, no markdown code fences,
+matching this exact structure:
+
+{
+  "questions": [
+    {
+      "question": "...",
+      "options": ["...", "...", "...", "..."],
+      "correct_index": 0
+    }
+  ]
+}
+"""

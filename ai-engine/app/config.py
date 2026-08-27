@@ -18,7 +18,7 @@ CHROMA_PATH = "./demo-rag-chroma"
 COLLECTION_NAME = "RAG_PROJECT"
 
 # --- Local model paths ---
-CHAT_MODEL_PATH = "models/llm/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
+CHAT_MODEL_PATH = "models/llm/Qwen2.5-3B-instruct-Q3_K_M.gguf"
 EMBED_MODEL_PATH = "models/embeddings/multilingual-e5-small"
 CROSS_ENCODER_MODEL_PATH = "models/cross-encoder-model/ms-marco-MiniLM-L6-v2"
 

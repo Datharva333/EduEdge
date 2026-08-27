@@ -244,3 +244,8 @@ def process_json(json_data: dict, source_id: str) -> list[Document]:
 
     parent_store.save_parents(parents_to_save)
     return child_documents
+
+def chunk_raw_text(raw_text: str) -> list[str]:
+    """Treats a flat raw_text chapter (no section/content_type structure)
+    as a single 'prose' parent and semantically chunks it."""
+    return chunk_parent(raw_text, content_type="prose")

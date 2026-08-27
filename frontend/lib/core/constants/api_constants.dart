@@ -1,6 +1,7 @@
 class ApiConstants {
   static const String baseUrl =
-      'https://catapult-crouton-sphere.ngrok-free.dev';
+      //'https://catapult-crouton-sphere.ngrok-free.dev';//
+      'http://localhost:8000';
   static const String health = '/health';
   static const String login = '/auth/login';
   static const String lessons = '/lessons';

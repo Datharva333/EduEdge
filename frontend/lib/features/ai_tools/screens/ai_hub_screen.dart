@@ -60,10 +60,6 @@ class _AiHubScreenState extends State<AiHubScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final lessons = MockService.lessons;
-    final selectedLesson = lessons.firstWhere(
-      (l) => l['id'] == _selectedLessonId,
-      orElse: () => lessons.first,
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -161,6 +157,7 @@ class _AiHubScreenState extends State<AiHubScreen> {
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedLessonId,
+              isExpanded: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(
@@ -172,17 +169,10 @@ class _AiHubScreenState extends State<AiHubScreen> {
                   .map(
                     (l) => DropdownMenuItem(
                       value: l['id'] as String,
-                      child: Row(
-                        children: [
-                          Text(l['icon'], style: const TextStyle(fontSize: 18)),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              '${l['title']} (Class ${l['class']})',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '${l['icon']} ${l['title']}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   )
@@ -212,7 +202,7 @@ class _AiHubScreenState extends State<AiHubScreen> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               shrinkWrap: true,
-              childAspectRatio: 2.0,
+              childAspectRatio: 2.2,
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _HubButton(
@@ -319,7 +309,6 @@ class _AiHubScreenState extends State<AiHubScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Quick actions after summary
               Row(
                 children: [
                   Expanded(
@@ -332,10 +321,9 @@ class _AiHubScreenState extends State<AiHubScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.style, size: 16),
-                      label: const Text('Flashcards'),
-                      onPressed: () =>
-                          context.push('/flashcards/$_selectedLessonId'),
+                      icon: const Icon(Icons.chat, size: 16),
+                      label: const Text('Ask AI'),
+                      onPressed: () => context.push('/chat/$_selectedLessonId'),
                     ),
                   ),
                 ],
@@ -372,26 +360,30 @@ class _HubButton extends StatelessWidget {
         onTap: loading ? null : onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               loading && label == 'Summarize'
                   ? SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: color,
                       ),
                     )
-                  : Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  fontSize: 13,
+                  : Icon(icon, color: color, size: 18),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                    fontSize: 12,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

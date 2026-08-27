@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../services/api_service.dart';
 import '../../../services/mock_service.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -10,7 +11,9 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  late List<Map<String, dynamic>> _questions;
+  List<Map<String, dynamic>> _questions = [];
+  bool _loading = true;
+  String? _error;
   int _current = 0;
   int _score = 0;
   int? _selected;
@@ -20,86 +23,196 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    _questions = _getQuestionsForLesson(widget.lessonId);
+    _loadQuiz();
   }
 
-  List<Map<String, dynamic>> _getQuestionsForLesson(String lessonId) {
+  Future<void> _loadQuiz() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    final questions = await ApiService.getQuiz(widget.lessonId);
+
+    if (mounted) {
+      if (questions != null && questions.isNotEmpty) {
+        setState(() {
+          _questions = questions;
+          _loading = false;
+        });
+      } else {
+        // fallback to mock questions
+        setState(() {
+          _questions = _getMockQuestions(widget.lessonId);
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _getMockQuestions(String lessonId) {
     switch (lessonId) {
       case '1':
         return [
           {
-            'q': 'What is the main purpose of photosynthesis?',
+            'q': 'What are the three states of matter?',
             'options': [
-              'To absorb water',
-              'To convert sunlight into food',
-              'To release CO2',
-              'To grow roots',
+              'Solid, Liquid, Gas',
+              'Hot, Cold, Warm',
+              'Hard, Soft, Medium',
+              'Heavy, Light, Medium',
+            ],
+            'answer': 0,
+          },
+          {
+            'q': 'What is the process of solid converting to liquid called?',
+            'options': ['Evaporation', 'Condensation', 'Melting', 'Freezing'],
+            'answer': 2,
+          },
+          {
+            'q': 'In which state are particles most tightly packed?',
+            'options': ['Gas', 'Liquid', 'Plasma', 'Solid'],
+            'answer': 3,
+          },
+        ];
+      case '5':
+        return [
+          {
+            'q': 'What is the formula for speed?',
+            'options': [
+              'Speed = Distance x Time',
+              'Speed = Distance / Time',
+              'Speed = Time / Distance',
+              'Speed = Mass / Time',
             ],
             'answer': 1,
           },
           {
-            'q': 'What does chlorophyll do?',
+            'q': 'What is displacement?',
             'options': [
-              'Absorbs water',
-              'Produces oxygen only',
-              'Captures light energy',
-              'Breaks down glucose',
+              'Total path length',
+              'Shortest distance between start and end',
+              'Speed x Time',
+              'None of these',
             ],
-            'answer': 2,
+            'answer': 1,
           },
           {
-            'q': 'What gas do plants absorb during photosynthesis?',
-            'options': ['Oxygen', 'Nitrogen', 'Carbon Dioxide', 'Hydrogen'],
+            'q': 'What does the equation v = u + at represent?',
+            'options': [
+              'First equation of motion',
+              'Second equation of motion',
+              'Third equation of motion',
+              'Law of gravity',
+            ],
+            'answer': 0,
+          },
+        ];
+      case '6':
+        return [
+          {
+            'q': "Newton's First Law is also called?",
+            'options': [
+              'Law of Force',
+              'Law of Inertia',
+              'Law of Motion',
+              'Law of Action',
+            ],
+            'answer': 1,
+          },
+          {
+            'q': 'What is the formula F = ma?',
+            'options': [
+              "Newton's First Law",
+              "Newton's Second Law",
+              "Newton's Third Law",
+              'Law of Conservation',
+            ],
+            'answer': 1,
+          },
+          {
+            'q': 'What is momentum?',
+            'options': [
+              'Mass / Velocity',
+              'Mass x Acceleration',
+              'Mass x Velocity',
+              'Force x Time',
+            ],
             'answer': 2,
           },
         ];
-      case '2':
+      case '7':
         return [
           {
-            'q': "What does Newton's first law describe?",
-            'options': ['Gravity', 'Inertia', 'Acceleration', 'Friction'],
+            'q': 'When did the French Revolution begin?',
+            'options': ['1776', '1789', '1799', '1804'],
             'answer': 1,
           },
           {
-            'q': 'What is the formula for Newton\'s second law?',
-            'options': ['F=mv', 'F=ma', 'F=m/a', 'F=a/m'],
-            'answer': 1,
-          },
-          {
-            'q': "Newton's third law states every action has?",
+            'q': 'What was stormed on July 14, 1789?',
             'options': [
-              'No reaction',
-              'A bigger reaction',
-              'An equal and opposite reaction',
-              'A smaller reaction',
+              'The Palace of Versailles',
+              'The Bastille prison',
+              'The Louvre',
+              'Notre Dame',
             ],
-            'answer': 2,
+            'answer': 1,
+          },
+          {
+            'q': 'What were the three ideals of the French Revolution?',
+            'options': [
+              'Faith, Hope, Charity',
+              'Liberty, Equality, Fraternity',
+              'Power, Glory, Honor',
+              'Land, Bread, Peace',
+            ],
+            'answer': 1,
           },
         ];
-      case '3':
+      case '9':
         return [
           {
-            'q': 'When did World War II begin?',
-            'options': ['1935', '1937', '1939', '1941'],
-            'answer': 2,
-          },
-          {
-            'q': 'Which country did Germany invade to start WWII?',
-            'options': ['France', 'Poland', 'Russia', 'Britain'],
+            'q': 'When did India gain independence?',
+            'options': [
+              'August 15, 1945',
+              'August 15, 1947',
+              'January 26, 1950',
+              'June 3, 1947',
+            ],
             'answer': 1,
           },
           {
-            'q': 'When did World War II end?',
-            'options': ['1943', '1944', '1945', '1946'],
+            'q': 'What was the Dandi March about?',
+            'options': [
+              'Protesting salt tax',
+              'Demanding voting rights',
+              'Fighting for land rights',
+              'Boycotting cloth',
+            ],
+            'answer': 0,
+          },
+          {
+            'q': 'When was the Indian National Congress founded?',
+            'options': ['1857', '1875', '1885', '1905'],
             'answer': 2,
           },
         ];
       default:
         return [
           {
-            'q': 'This lesson has no quiz yet.',
-            'options': ['OK', 'Got it', 'Understood', 'Fine'],
+            'q': 'What is the main topic of this lesson?',
+            'options': ['Science', 'History', 'English', 'Mathematics'],
             'answer': 0,
+          },
+          {
+            'q': 'Which platform are you using to study?',
+            'options': ['EduEdge', 'Other app', 'Textbook', 'YouTube'],
+            'answer': 0,
+          },
+          {
+            'q': 'Is offline learning important for rural students?',
+            'options': ['No', 'Sometimes', 'Never', 'Yes, very important'],
+            'answer': 3,
           },
         ];
     }
@@ -133,6 +246,22 @@ class _QuizScreenState extends State<QuizScreen> {
       (l) => l['id'] == widget.lessonId,
       orElse: () => MockService.lessons.first,
     );
+
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: Text('${lesson['subject']} Quiz')),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Generating quiz questions...'),
+            ],
+          ),
+        ),
+      );
+    }
 
     if (_done) {
       return Scaffold(

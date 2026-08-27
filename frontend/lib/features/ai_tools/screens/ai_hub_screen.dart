@@ -212,7 +212,7 @@ class _AiHubScreenState extends State<AiHubScreen> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               shrinkWrap: true,
-              childAspectRatio: 2.2,
+              childAspectRatio: 2.0,
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _HubButton(
@@ -239,6 +239,12 @@ class _AiHubScreenState extends State<AiHubScreen> {
                   label: 'Flashcards',
                   color: Colors.orange,
                   onTap: () => context.push('/flashcards/$_selectedLessonId'),
+                ),
+                _HubButton(
+                  icon: Icons.chat,
+                  label: 'Ask AI',
+                  color: Colors.deepPurple,
+                  onTap: () => context.push('/chat/$_selectedLessonId'),
                 ),
               ],
             ),

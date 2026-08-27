@@ -7,4 +7,5 @@ class ApiConstants {
   static const String lessons = '/lessons';
   static const String summarize = '/ai/summarize';
   static const String quiz = '/ai/quiz';
+  static const String chat = '/ai/chat';
 }

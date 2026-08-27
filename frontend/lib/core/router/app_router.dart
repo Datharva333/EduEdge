@@ -3,11 +3,13 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/lesson/screens/lesson_screen.dart';
+import '../../features/ai_tools/screens/ai_hub_screen.dart';
 import '../../features/ai_tools/screens/ai_screen.dart';
 import '../../features/ai_tools/screens/quiz_screen.dart';
 import '../../features/ai_tools/screens/mindmap_screen.dart';
 import '../../features/ai_tools/screens/flashcard_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
+import '../../features/ai_tools/screens/chat_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -27,6 +29,12 @@ class AppRouter {
         builder: (_, state) =>
             AiScreen(lessonId: state.pathParameters['lessonId']),
       ),
+      GoRoute(path: '/aihub', builder: (_, __) => const AiHubScreen()),
+      GoRoute(
+        path: '/aihub/:lessonId',
+        builder: (_, state) =>
+            AiHubScreen(lessonId: state.pathParameters['lessonId']),
+      ),
       GoRoute(
         path: '/quiz/:lessonId',
         builder: (_, state) =>
@@ -43,6 +51,11 @@ class AppRouter {
             FlashcardScreen(lessonId: state.pathParameters['lessonId'] ?? '1'),
       ),
       GoRoute(path: '/progress', builder: (_, __) => const ProgressScreen()),
+      GoRoute(
+        path: '/chat/:lessonId',
+        builder: (_, state) =>
+            ChatScreen(lessonId: state.pathParameters['lessonId'] ?? '1'),
+      ),
     ],
   );
 }

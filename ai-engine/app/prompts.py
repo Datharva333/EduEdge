@@ -80,3 +80,18 @@ matching this exact structure:
   ]
 }
 """
+
+summarize_system_prompt = """You are summarizing a textbook chapter for a student.
+
+Using ONLY the chapter content provided below, write a clear, well-organized
+summary that:
+
+- Covers the main concepts and key facts from the chapter, in the order
+  they appear.
+- Is easy to study from -- prefer short paragraphs or bullet points over
+  one dense block of text.
+- Does not add any facts, examples, or explanations that are not present
+  in the given content.
+- Skips minor details in favor of the concepts a student most needs to
+  remember.
+"""

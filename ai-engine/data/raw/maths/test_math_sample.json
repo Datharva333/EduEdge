@@ -1,0 +1,45 @@
+{
+  "subject": "Mathematics",
+  "chapter": "Quadratic Equations",
+  "sections": [
+    {
+      "section_title": "Introduction to Quadratic Equations",
+      "subsections": [
+        {
+          "subsection_title": "What is a Quadratic Equation",
+          "content_type": "prose",
+          "text": "A quadratic equation is a polynomial equation of degree 2, meaning the highest power of the variable is 2. The standard form of a quadratic equation is ax² + bx + c = 0, where a, b, and c are real numbers and a ≠ 0. If a were equal to 0, the equation would reduce to a linear equation instead. Quadratic equations appear frequently in physics and geometry, for example when calculating the area of a shape or the trajectory of a projectile under gravity. Every quadratic equation has exactly two roots, which may be real or complex, and may be equal to each other in the special case of a perfect square."
+        },
+        {
+          "subsection_title": "Standard Form and Coefficients",
+          "content_type": "definition",
+          "text": "In the equation ax² + bx + c = 0, the coefficient a is called the leading coefficient, b is the linear coefficient, and c is the constant term. The value of a determines whether the parabola formed by the equation opens upward (a > 0) or downward (a < 0). The larger the absolute value of a, the narrower the parabola. When b = 0, the equation simplifies to ax² + c = 0, which is symmetric about the y-axis."
+        }
+      ]
+    },
+    {
+      "section_title": "The Quadratic Formula",
+      "subsections": [
+        {
+          "subsection_title": "Statement of the Formula",
+          "content_type": "formula",
+          "text": "For any quadratic equation of the form ax² + bx + c = 0, where a ≠ 0, the roots are given by:\n\nx = (-b ± √(b² - 4ac)) / (2a)\n\nThis is known as the quadratic formula. The term under the square root, b² - 4ac, is called the discriminant and is often written as D or ∆. The discriminant determines the nature of the roots: if ∆ > 0, there are two distinct real roots; if ∆ = 0, there is exactly one real root (a repeated root); if ∆ < 0, the roots are complex conjugates."
+        },
+        {
+          "subsection_title": "Deriving the Quadratic Formula",
+          "content_type": "worked_example",
+          "text": "We derive the quadratic formula starting from ax² + bx + c = 0.\n\nStep 1: Divide every term by a (since a ≠ 0):\nx² + (b/a)x + (c/a) = 0\n\nStep 2: Move the constant term to the right-hand side:\nx² + (b/a)x = -(c/a)\n\nStep 3: Complete the square by adding (b/2a)² to both sides:\nx² + (b/a)x + (b/2a)² = (b/2a)² - (c/a)\n\nStep 4: Write the left-hand side as a perfect square:\n(x + b/2a)² = (b² - 4ac) / 4a²\n\nStep 5: Take the square root of both sides:\nx + b/2a = ± √(b² - 4ac) / 2a\n\nStep 6: Isolate x:\nx = (-b ± √(b² - 4ac)) / 2a\n\nThis matches the standard quadratic formula stated earlier."
+        },
+        {
+          "subsection_title": "Worked Example: Solving 2x² - 4x - 6 = 0",
+          "content_type": "worked_example",
+          "text": "Solve 2x² - 4x - 6 = 0 using the quadratic formula.\n\nStep 1: Identify the coefficients: a = 2, b = -4, c = -6.\n\nStep 2: Calculate the discriminant:\n∆ = b² - 4ac = (-4)² - 4(2)(-6) = 16 + 48 = 64\n\nStep 3: Since ∆ = 64 > 0, there are two distinct real roots.\n\nStep 4: Apply the quadratic formula:\nx = (-(-4) ± √64) / (2 × 2) = (4 ± 8) / 4\n\nStep 5: Calculate both roots:\nx₁ = (4 + 8) / 4 = 12 / 4 = 3\nx₂ = (4 - 8) / 4 = -4 / 4 = -1\n\nSo the roots are x = 3 and x = -1. We can verify by substitution: 2(3)² - 4(3) - 6 = 18 - 12 - 6 = 0 ✓ and 2(-1)² - 4(-1) - 6 = 2 + 4 - 6 = 0 ✓"
+        }
+      ]
+    },
+    {
+      "section_title": "Nature of Roots",
+      "text": "The discriminant ∆ = b² - 4ac tells us about the nature of the roots without actually solving the equation. When ∆ ≥ 0, the roots are real; when ∆ < 0, the roots are complex and occur in conjugate pairs. This is useful in problems where we only need to know how many real solutions exist, such as determining how many times a parabola crosses the x-axis. A parabola with ∆ > 0 crosses the x-axis at two points, one with ∆ = 0 touches the x-axis at exactly one point (its vertex), and one with ∆ < 0 does not touch the x-axis at all."
+    }
+  ]
+}

@@ -13,7 +13,6 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   List<Map<String, dynamic>> _questions = [];
   bool _loading = true;
-  String? _error;
   int _current = 0;
   int _score = 0;
   int? _selected;
@@ -29,7 +28,6 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _loadQuiz() async {
     setState(() {
       _loading = true;
-      _error = null;
     });
 
     final questions = await ApiService.getQuiz(widget.lessonId);

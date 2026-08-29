@@ -14,9 +14,8 @@ class EduEdgeApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'EduEdge',
         theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
+        routerConfig: AppRouter.router,
       ),
     );
   }

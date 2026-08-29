@@ -32,3 +32,9 @@ class Lesson(Base):
     subject: Mapped[str] = mapped_column(String(80), nullable=False)
     icon: Mapped[str] = mapped_column(String(10), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # NEW — path to the source JSON file on the AI engine, relative to
+    # its data/raw/ folder, e.g. "maths/test_math_sample.json". Needed
+    # because the AI engine's /ai/summarize (and later /ai/chat,
+    # /ai/quiz) take a filename, not this row's id.
+    source_filename: Mapped[str] = mapped_column(String(255), nullable=False)

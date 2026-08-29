@@ -79,3 +79,18 @@ class TranslateRequest(BaseModel):
 
 class TranslateResponse(BaseModel):
     translated_text: str
+
+
+# ── /ai/summarize ────────────────────────────────────────────────────
+# NOTE: this is the request/response shape for calling the AI ENGINE's
+# /ai/summarize endpoint. It's a different class from
+# app.schemas.frontend_bridge.SummarizeRequest, which is the shape the
+# Flutter app sends TO this backend. Don't confuse the two — import
+# this one with an alias in routers/frontend_bridge.py.
+class SummarizeRequest(BaseModel):
+    filename: str
+    topic: str | None = None
+
+
+class SummarizeResponse(BaseModel):
+    summary: str

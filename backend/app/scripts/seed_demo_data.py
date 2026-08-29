@@ -33,6 +33,10 @@ LESSONS = [
             "6CO2 + 6H2O + light → C6H12O6 + 6O2. Chlorophyll in the leaves "
             "captures the light energy needed for this process."
         ),
+        # NOTE: no real matching file on the AI engine yet — this will
+        # 404 from /ai/summarize until Navin adds a biology JSON file
+        # under ai-engine/data/raw/. Swap in the real path then.
+        "source_filename": "biology/photosynthesis.json",
     },
     {
         "id": "2",
@@ -46,6 +50,9 @@ LESSONS = [
             "states F=ma, force equals mass times acceleration. The third "
             "law states every action has an equal and opposite reaction."
         ),
+        # This is the ONE file that actually exists right now under
+        # ai-engine/data/raw/, so use lesson "2" for end-to-end testing.
+        "source_filename": "maths/test_math_sample.json",
     },
     {
         "id": "3",
@@ -59,6 +66,8 @@ LESSONS = [
             "Poland. Key events include the Battle of Britain, D-Day, and "
             "the atomic bombings of Hiroshima and Nagasaki."
         ),
+        # Same caveat as lesson "1" — placeholder until real content exists.
+        "source_filename": "history/world_war_2.json",
     },
 ]
 

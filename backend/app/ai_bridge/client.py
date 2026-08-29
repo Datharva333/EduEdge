@@ -10,6 +10,7 @@ sends it, and deserializes the response.
 Used by:
   - scripts/ingest_ncert_content.py  -> chunk(), embed()
   - app/services/translation_service.py -> translate()
+  - app/routers/frontend_bridge.py -> summarize()
   - (cache_lookup() is wired up but unused until you decide whether
     any endpoint needs a live "ask a question" path — see the note in
     the last message of this conversation about on-device vs
@@ -29,6 +30,8 @@ from app.ai_bridge.schemas import (
     ChunkResponse,
     EmbedRequest,
     EmbedResponse,
+    SummarizeRequest,
+    SummarizeResponse,
     TranslateRequest,
     TranslateResponse,
 )
@@ -41,8 +44,9 @@ ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
 
 class AIEngineError(RuntimeError):
     """Raised when the AI engine is unreachable or returns an error.
-    Callers (ingestion script, translation service) decide whether to
-    retry, skip, or abort — this client never swallows failures."""
+    Callers (ingestion script, translation service, frontend bridge)
+    decide whether to retry, skip, or abort — this client never
+    swallows failures."""
 
 
 class AIEngineClient:
@@ -63,6 +67,9 @@ class AIEngineClient:
 
     def translate(self, request: TranslateRequest) -> TranslateResponse:
         return self._post("/translate", request, TranslateResponse)
+
+    def summarize(self, request: SummarizeRequest) -> SummarizeResponse:
+        return self._post("/ai/summarize", request, SummarizeResponse)
 
     def _post(self, path: str, payload: BaseModel, response_model: type[ResponseModel]) -> ResponseModel:
         try:

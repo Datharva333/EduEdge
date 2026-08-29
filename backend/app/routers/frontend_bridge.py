@@ -10,7 +10,7 @@ contract:
     POST /auth/login      -> { "token": "...", "user": { "name": "..." } }
     GET  /lessons          -> [ list of lessons ]
     GET  /lessons/{id}      -> single lesson
-    POST /ai/summarize       -> { "summary": "..." } (hardcoded)
+    POST /ai/summarize       -> { "summary": "..." } (now calls the real AI engine)
 
 Rather than reshaping your real auth/content endpoints (and breaking
 their production contract), this router adapts them: /auth/login
@@ -22,6 +22,8 @@ app is updated to call the real /api/v1 endpoints directly.
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.ai_bridge.client import AIEngineClient, AIEngineError
+from app.ai_bridge.schemas import SummarizeRequest as AISummarizeRequest
 from app.database.session import get_db
 from app.repositories.lesson_repository import LessonRepository
 from app.schemas.auth import UserLoginRequest
@@ -58,14 +60,24 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db)) -> LessonResponse:
 
 
 @router.post("/ai/summarize", response_model=SummarizeResponse)
-def summarize(payload: SummarizeRequest) -> SummarizeResponse:
-    # Hardcoded per the contract your friend sent. Swap this for a real
-    # call through app/ai_bridge/client.py once the AI engine exposes a
-    # summarize-equivalent endpoint — this is the only place to change.
-    return SummarizeResponse(
-        summary=(
-            "This is a placeholder AI-generated summary. Once the AI "
-            "engine is connected, this will be a real summary of the "
-            "lesson content."
+def summarize(payload: SummarizeRequest, db: Session = Depends(get_db)) -> SummarizeResponse:
+    if not payload.lessonId:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "lessonId is required")
+
+    lesson = LessonRepository(db).get_by_id(payload.lessonId)
+    if lesson is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Lesson not found")
+
+    ai_client = AIEngineClient()
+    try:
+        result = ai_client.summarize(
+            AISummarizeRequest(filename=lesson.source_filename, topic=payload.topic)
         )
-    )
+    except AIEngineError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, "AI engine is unavailable — is it running?"
+        ) from exc
+    finally:
+        ai_client.close()
+
+    return SummarizeResponse(summary=result.summary)

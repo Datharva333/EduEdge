@@ -8,15 +8,17 @@ Run with: uvicorn api:app --reload --port 8001
 import hashlib
 import json
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from app.chunk import chunk_raw_text
-from app.config import EMBED_MODEL_PATH
+from app.config import DATA_RAW_DIR, EMBED_MODEL_PATH
 from app.embed import get_embed_model
+from app.json_loader import load_parent_units
 from app.llm import call_llm
-from app.prompts import quiz_system_prompt
+from app.prompts import quiz_system_prompt, summarize_system_prompt
 from app.rag import re_rank_cross_encoders, resolve_parent_context
 from app.retrieve import query_collection
 
@@ -225,3 +227,61 @@ def quiz_endpoint(req: QuizRequest) -> QuizResponse:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+# ── /ai/summarize ───────────────────────────────────────────────────
+class SummarizeRequest(BaseModel):
+    # Path to the source JSON file, relative to DATA_RAW_DIR, e.g.
+    # "science/motion.json". NOT the same as the backend's numeric
+    # lessonId -- there's no mapping between the two yet (see the TODO
+    # on _retrieve_context above). Until that mapping exists, the
+    # backend needs to send the actual filename here.
+    filename: str
+    # Optional. If given, summarizes only the parts of the chapter
+    # relevant to this topic (using cross-encoder reranking over the
+    # chapter's own sections -- no Chroma/global retrieval involved,
+    # since we already know exactly which file to look in). If omitted,
+    # summarizes the whole chapter.
+    topic: str | None = None
+
+
+class SummarizeResponse(BaseModel):
+    summary: str
+
+
+@app.post("/ai/summarize", response_model=SummarizeResponse)
+def summarize_endpoint(req: SummarizeRequest) -> SummarizeResponse:
+    file_path = Path(DATA_RAW_DIR) / req.filename
+
+    if not file_path.is_file():
+        raise HTTPException(status_code=404, detail=f"No such file: {req.filename}")
+
+    try:
+        with open(file_path, encoding="utf-8") as f:
+            json_data = json.load(f)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON in {req.filename}") from e
+
+    units = load_parent_units(json_data)
+    if not units:
+        raise HTTPException(status_code=404, detail="No content found in that file.")
+
+    if req.topic:
+        # Topic-focused: rerank this chapter's own sections against the
+        # topic and only summarize the most relevant ones -- reduces
+        # hallucination risk vs. dumping the whole chapter, and avoids
+        # padding the LLM's context with irrelevant sections.
+        unit_texts = [unit["text"] for unit in units]
+        reranked_ids = re_rank_cross_encoders(req.topic, unit_texts)
+        context = "\n\n".join(unit_texts[i] for i in reranked_ids)
+        user_prompt = f"Summarize what this chapter says about: {req.topic}"
+    else:
+        # No topic: summarize the whole chapter.
+        context = "\n\n".join(unit["text"] for unit in units)
+        user_prompt = "Summarize this chapter for a student."
+
+    summary = "".join(call_llm(
+        context=context,
+        prompt=user_prompt,
+        system=summarize_system_prompt,
+    ))
+    return SummarizeResponse(summary=summary)

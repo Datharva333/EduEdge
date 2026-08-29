@@ -51,3 +51,6 @@ PARENT_STORE_PATH = "./parent_store.db"
 # only a last-resort fallback (blank-line paragraph split, no breakpoint
 # detection) for the rare block that's unusually long.
 NON_SEMANTIC_HARD_CAP_TOKENS = 500
+
+# --- Raw content JSON files (uploaded chapter source files) ---
+DATA_RAW_DIR = "data/raw"

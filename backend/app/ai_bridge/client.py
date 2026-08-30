@@ -50,7 +50,7 @@ class AIEngineError(RuntimeError):
 
 
 class AIEngineClient:
-    def __init__(self, base_url: str | None = None, timeout_seconds: float = 30.0):
+    def __init__(self, base_url: str | None = None, timeout_seconds: float = 120.0):
         self._client = httpx.Client(
             base_url=base_url or settings.ai_engine_base_url,
             timeout=timeout_seconds,

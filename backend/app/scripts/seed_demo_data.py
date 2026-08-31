@@ -40,19 +40,19 @@ LESSONS = [
     },
     {
         "id": "2",
-        "title": "Newton's Laws of Motion",
-        "subject": "Physics",
+        "title": "Is Matter Around Us Pure?",
+        "subject": "Science",
         "icon": "⚡",
         "content": (
-            "Newton's three laws of motion form the foundation of classical "
-            "mechanics. The first law states that an object stays at rest "
-            "or in motion unless acted upon by a force. The second law "
-            "states F=ma, force equals mass times acceleration. The third "
-            "law states every action has an equal and opposite reaction."
+            "Matter around us can be classified as pure substances or "
+            "mixtures. Mixtures can be homogeneous (like solutions) or "
+            "heterogeneous (like suspensions and colloids). This chapter "
+            "covers solutions, concentration, the Tyndall effect, and how "
+            "elements and compounds differ from mixtures."
         ),
         # This is the ONE file that actually exists right now under
         # ai-engine/data/raw/, so use lesson "2" for end-to-end testing.
-        "source_filename": "maths/test_math_sample.json",
+        "source_filename": "science/matter_around_us_pure.json",
     },
     {
         "id": "3",

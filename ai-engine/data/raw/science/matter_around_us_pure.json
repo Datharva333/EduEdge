@@ -1,0 +1,81 @@
+{
+  "subject": "Science",
+  "chapter": "Is Matter Around Us Pure?",
+  "sections": [
+    {
+      "section_title": "Mixtures",
+      "subsections": [
+        {
+          "subsection_title": "What is a Mixture?",
+          "content_type": "definition",
+          "text": "A mixture is a substance which consists of two or more elements or compounds mixed together in any proportion, where they do not undergo any chemical change. The constituents of a mixture do not lose their own properties, and the composition of a mixture is not fixed. Air, sea water, and soil are common examples of mixtures found around us."
+        },
+        {
+          "subsection_title": "Types of Mixtures",
+          "content_type": "prose",
+          "text": "Mixtures are classified into two types based on the nature of their components: homogeneous mixtures and heterogeneous mixtures. A homogeneous mixture has a uniform composition throughout its mass, meaning it has only one phase, such as salt dissolved in water or a mixture of alcohol and water. A heterogeneous mixture has a non-uniform composition, meaning it has visibly different phases, such as a mixture of salt and sulphur, or grains and pulses along with some dirt particles."
+        },
+        {
+          "subsection_title": "Properties of a Mixture",
+          "content_type": "prose",
+          "text": "A mixture shows the properties of its constituent substances. For example, a mixture of iron filings and sulphur powder shows the properties of both iron and sulphur -- the iron filings can still be attracted by a magnet, and the sulphur retains its yellow colour and characteristic smell. The components of a mixture can be separated by physical methods such as handpicking, filtration, evaporation, distillation, or using a magnet, without any new substance being formed."
+        }
+      ]
+    },
+    {
+      "section_title": "Solutions",
+      "subsections": [
+        {
+          "subsection_title": "What is a Solution?",
+          "content_type": "definition",
+          "text": "A solution is a homogeneous mixture of two or more substances. A solution has a solvent and a solute as its components. The component of the solution that dissolves the other component in it (usually the one present in a larger amount) is called the solvent, and the component that is dissolved in the solvent (usually present in a lesser amount) is called the solute. A common example is a solution of sugar in water, where sugar is the solute and water is the solvent."
+        },
+        {
+          "subsection_title": "Properties of a Solution",
+          "content_type": "prose",
+          "text": "A solution is a homogeneous mixture at the particle level, meaning it has a uniform composition throughout. The particles of a solution are smaller than 1 nanometre in diameter, so they cannot be seen by the naked eye. Because the particles are so small, they do not scatter a beam of light passing through the solution, so a solution does not show the Tyndall effect. The solute particles in a solution cannot be separated from the mixture by the process of filtration, and a solution is stable -- the solute particles do not settle down when left undisturbed."
+        },
+        {
+          "subsection_title": "Concentration of a Solution",
+          "content_type": "formula",
+          "text": "The concentration of a solution is the amount of solute present in a given amount of solvent or solution. Mass by mass percentage of a solution is given by: Mass % of solute = (Mass of solute / Mass of solution) x 100, where Mass of solution = Mass of solute + Mass of solvent. Similarly, the mass by volume percentage of a solution is given by: Mass by volume % = (Mass of solute / Volume of solution) x 100."
+        },
+        {
+          "subsection_title": "Calculating Concentration -- Worked Example",
+          "content_type": "worked_example",
+          "text": "Problem: 20 g of sugar is dissolved in 500 g of water. Calculate the mass by mass percentage of the solution. Solution: Mass of solute (sugar) = 20 g. Mass of solvent (water) = 500 g. Mass of solution = Mass of solute + Mass of solvent = 20 g + 500 g = 520 g. Mass % of solute = (Mass of solute / Mass of solution) x 100 = (20 / 520) x 100 = 3.85%. Therefore, the concentration of the sugar solution is 3.85% by mass."
+        }
+      ]
+    },
+    {
+      "section_title": "Suspensions and Colloids",
+      "subsections": [
+        {
+          "subsection_title": "What is a Suspension?",
+          "content_type": "definition",
+          "text": "A suspension is a heterogeneous mixture in which the solute particles do not dissolve but remain suspended throughout the bulk of the medium. Particles of a suspension are visible to the naked eye, are large enough (bigger than 1000 nanometres) to scatter a beam of light passing through it, and show the Tyndall effect. The solute particles in a suspension settle down when the suspension is left undisturbed, and they can be separated from the mixture by the process of filtration. A common example is muddy water, which is a suspension of soil particles in water."
+        },
+        {
+          "subsection_title": "What is a Colloidal Solution?",
+          "content_type": "definition",
+          "text": "A colloidal solution, or colloid, is a heterogeneous mixture in which the particle size is too small to be seen with the naked eye, but is big enough to scatter a beam of light and show the Tyndall effect. Colloids are actually heterogeneous mixtures, but they appear to be homogeneous because the particle size is very small (between 1 and 1000 nanometres) and evenly spread throughout the medium. Milk, ink, and shaving cream are common examples of colloidal solutions."
+        },
+        {
+          "subsection_title": "The Tyndall Effect",
+          "content_type": "prose",
+          "text": "The Tyndall effect refers to the scattering of a beam of light by the particles of a colloid or a suspension. When a beam of light is passed through a colloidal solution or a suspension, the path of the beam becomes visible because the particles scatter the light. This scattering does not happen in a true solution because the solute particles in a true solution are too small to scatter light. The Tyndall effect can be observed when sunlight passes through the canopy of a dense forest, or when a beam of light from a projector passes through smoke or fog."
+        }
+      ]
+    },
+    {
+      "section_title": "Physical and Chemical Changes",
+      "subsections": [
+        {
+          "subsection_title": "Elements, Compounds, and Mixtures",
+          "content_type": "prose",
+          "text": "Pure substances can be classified as either elements or compounds. An element is a form of matter that cannot be broken down into simpler substances by ordinary chemical or physical methods, and it consists of only one type of particle -- for example, iron, copper, silver, and gold. A compound is a substance made up of two or more elements chemically combined in a fixed proportion, and it can be broken down into simpler substances by chemical methods -- for example, water, carbon dioxide, and common salt. Unlike a mixture, a compound has a fixed composition and its properties are different from those of its constituent elements."
+        }
+      ]
+    }
+  ]
+}

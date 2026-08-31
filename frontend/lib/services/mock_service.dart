@@ -26,18 +26,9 @@ class MockService {
     },
     {
       'id': '2',
-      'title': 'Is Matter Around Us Pure?',
-      'subject': 'Science',
-      'class': '9',
-      'icon': '🧪',
-      'content':
-          'Matter can be classified as pure substances and mixtures. '
-          'A pure substance has a uniform composition throughout. Elements and compounds are pure substances. '
-          'An element is made up of only one kind of atom, like gold, silver, and oxygen. '
-          'A compound is formed when two or more elements combine chemically in a fixed ratio, like water (H2O) and salt (NaCl). '
-          'A mixture contains two or more substances mixed together but not chemically combined. '
-          'Mixtures can be homogeneous (uniform throughout, like saltwater) or heterogeneous (not uniform, like soil). '
-          'Mixtures can be separated by physical methods like filtration, evaporation, distillation, and chromatography.',
+      'title': 'Quadratic Equations',
+      'subject': 'Mathematics',
+      'class': '10',
     },
     {
       'id': '3',

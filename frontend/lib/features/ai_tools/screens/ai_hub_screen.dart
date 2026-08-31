@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../services/api_service.dart';
-import '../../../services/mock_service.dart';
 
 class AiHubScreen extends StatefulWidget {
   final String? lessonId;
@@ -19,12 +18,19 @@ class _AiHubScreenState extends State<AiHubScreen> {
   bool _checkingStatus = true;
   late String _selectedLessonId;
   double? _responseTime;
+  List<Map<String, dynamic>> _lessons = [];
+  bool _loadingLessons = true;
 
   @override
   void initState() {
     super.initState();
-    _selectedLessonId = widget.lessonId ?? '1';
-    _checkBackend();
+    _selectedLessonId = widget.lessonId ?? '2';
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _checkBackend();
+    await _loadLessons();
   }
 
   Future<void> _checkBackend() async {
@@ -38,6 +44,52 @@ class _AiHubScreenState extends State<AiHubScreen> {
     }
   }
 
+  Future<void> _loadLessons() async {
+    if (mounted) {
+      setState(() => _loadingLessons = true);
+    }
+
+    final lessons = await ApiService.getLessons();
+
+    if (!mounted) return;
+
+    final normalizedLessons = lessons.map((lesson) {
+      final item = Map<String, dynamic>.from(lesson);
+      item['id'] = item['id'].toString();
+
+      // Temporary presentation mapping:
+      // backend lesson 2 points to maths/test_math_sample.json,
+      // whose actual content is Quadratic Equations.
+      if (item['id'] == '2') {
+        item['title'] = 'Quadratic Equations';
+        item['subject'] = 'Mathematics';
+        item['icon'] = '📐';
+      }
+
+      return item;
+    }).toList();
+
+    setState(() {
+      _lessons = normalizedLessons;
+      _loadingLessons = false;
+
+      if (_lessons.isNotEmpty) {
+        final ids = _lessons.map((lesson) => lesson['id'].toString()).toSet();
+
+        if (!ids.contains(_selectedLessonId)) {
+          _selectedLessonId = ids.contains('2')
+              ? '2'
+              : _lessons.first['id'].toString();
+        }
+      }
+    });
+  }
+
+  Future<void> _refresh() async {
+    await _checkBackend();
+    await _loadLessons();
+  }
+
   Future<void> _summarize() async {
     setState(() {
       _loadingSummary = true;
@@ -49,7 +101,10 @@ class _AiHubScreenState extends State<AiHubScreen> {
     stopwatch.stop();
     if (mounted) {
       setState(() {
-        _summary = result ?? 'Could not get summary. Is the backend running?';
+        _summary =
+            result ??
+            'Could not generate summary. Confirm the backend (port 8000) '
+                'and AI engine (port 8001) are both running.';
         _loadingSummary = false;
         _responseTime = stopwatch.elapsedMilliseconds / 1000;
       });
@@ -59,7 +114,6 @@ class _AiHubScreenState extends State<AiHubScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final lessons = MockService.lessons;
 
     return Scaffold(
       appBar: AppBar(
@@ -67,7 +121,7 @@ class _AiHubScreenState extends State<AiHubScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _checkBackend,
+            onPressed: _refresh,
             tooltip: 'Refresh status',
           ),
         ],
@@ -155,38 +209,58 @@ class _AiHubScreenState extends State<AiHubScreen> {
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _selectedLessonId,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+            if (_loadingLessons)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: LinearProgressIndicator(),
+              )
+            else if (_lessons.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.orange.shade200),
                 ),
-              ),
-              items: lessons
-                  .map(
-                    (l) => DropdownMenuItem(
-                      value: l['id'] as String,
-                      child: Text(
-                        '${l['icon']} ${l['title']}',
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                child: const Text(
+                  'No lessons received from the backend. '
+                  'Start the backend and seed the demo database, then refresh.',
+                ),
+              )
+            else
+              DropdownButtonFormField<String>(
+                value: _selectedLessonId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                items: _lessons
+                    .map(
+                      (lesson) => DropdownMenuItem<String>(
+                        value: lesson['id'].toString(),
+                        child: Text(
+                          '${lesson['icon'] ?? '📘'} ${lesson['title'] ?? 'Lesson'}',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    _selectedLessonId = val;
-                    _summary = null;
-                    _responseTime = null;
-                  });
-                }
-              },
-            ),
+                    )
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedLessonId = val;
+                      _summary = null;
+                      _responseTime = null;
+                    });
+                  }
+                },
+              ),
             const SizedBox(height: 20),
 
             // AI tools grid

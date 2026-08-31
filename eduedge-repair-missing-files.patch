@@ -1,0 +1,317 @@
+diff --git a/backend/.env.example b/backend/.env.example
+new file mode 100644
+index 0000000..24f831c
+--- /dev/null
++++ b/backend/.env.example
+@@ -0,0 +1,16 @@
++ENVIRONMENT=development
++LOG_LEVEL=INFO
++
++SECRET_KEY=change-this-local-secret
++JWT_SECRET=change-this-local-jwt-secret
++JWT_ALGORITHM=HS256
++ACCESS_TOKEN_EXPIRE_MINUTES=60
++
++SQLITE_DATABASE_URL=sqlite:///./eduedge.db
++POSTGRES_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/eduedge
++
++# Local summarize development does not require PostgreSQL.
++SYNC_ENABLED=false
++SYNC_INTERVAL_SECONDS=30
++
++AI_ENGINE_BASE_URL=http://127.0.0.1:8001
+diff --git a/backend/app/routers/ai.py b/backend/app/routers/ai.py
+new file mode 100644
+index 0000000..0ac5143
+--- /dev/null
++++ b/backend/app/routers/ai.py
+@@ -0,0 +1,84 @@
++"""Versioned AI endpoints exposed to the Flutter application.
++
++The backend owns lesson identity and maps a lesson id to the AI engine's
++source filename. The Flutter app never needs to know AI-engine file paths.
++"""
++
++from fastapi import APIRouter, Depends, HTTPException, status
++from sqlalchemy.orm import Session
++
++from app.ai_bridge.client import AIEngineClient, AIEngineError
++from app.ai_bridge.schemas import SummarizeRequest as AISummarizeRequest
++from app.database.session import get_db
++from app.repositories.lesson_repository import LessonRepository
++from app.schemas.ai import (
++    AIHealthResponse,
++    SummarizeLessonRequest,
++    SummarizeLessonResponse,
++)
++
++router = APIRouter()
++
++
++@router.get("/health", response_model=AIHealthResponse)
++def ai_health() -> AIHealthResponse:
++    """Check that the backend can actually reach the local AI engine."""
++    client = AIEngineClient(timeout_seconds=5.0)
++    try:
++        result = client.health()
++    except AIEngineError as exc:
++        raise HTTPException(
++            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
++            detail=exc.detail or "AI engine is unavailable",
++        ) from exc
++    finally:
++        client.close()
++
++    return AIHealthResponse(status=result.status)
++
++
++@router.post("/summarize", response_model=SummarizeLessonResponse)
++def summarize_lesson(
++    payload: SummarizeLessonRequest,
++    db: Session = Depends(get_db),
++) -> SummarizeLessonResponse:
++    """Generate a grounded summary for a backend lesson."""
++    lesson = LessonRepository(db).get_by_id(payload.lesson_id)
++    if lesson is None:
++        raise HTTPException(
++            status_code=status.HTTP_404_NOT_FOUND,
++            detail="Lesson not found",
++        )
++
++    client = AIEngineClient()
++    try:
++        result = client.summarize(
++            AISummarizeRequest(
++                filename=lesson.source_filename,
++                topic=payload.topic,
++            )
++        )
++    except AIEngineError as exc:
++        # A missing source file is a content/configuration problem, while an
++        # unreachable process is an availability problem. Preserve that
++        # distinction for the app and for debugging.
++        if exc.status_code == 404:
++            raise HTTPException(
++                status_code=status.HTTP_424_FAILED_DEPENDENCY,
++                detail=exc.detail or "AI content for this lesson is unavailable",
++            ) from exc
++
++        if exc.status_code is None:
++            raise HTTPException(
++                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
++                detail=exc.detail or "AI engine is unavailable",
++            ) from exc
++
++        raise HTTPException(
++            status_code=status.HTTP_502_BAD_GATEWAY,
++            detail=exc.detail or "AI engine failed to generate a summary",
++        ) from exc
++    finally:
++        client.close()
++
++    return SummarizeLessonResponse(summary=result.summary)
+diff --git a/backend/app/routers/lessons.py b/backend/app/routers/lessons.py
+new file mode 100644
+index 0000000..a3072fb
+--- /dev/null
++++ b/backend/app/routers/lessons.py
+@@ -0,0 +1,28 @@
++"""Versioned lesson API used by the Flutter application."""
++
++from fastapi import APIRouter, Depends, HTTPException, status
++from sqlalchemy.orm import Session
++
++from app.database.session import get_db
++from app.repositories.lesson_repository import LessonRepository
++from app.schemas.lesson import LessonResponse
++
++router = APIRouter()
++
++
++@router.get("", response_model=list[LessonResponse])
++def list_lessons(db: Session = Depends(get_db)) -> list[LessonResponse]:
++    """Return the current lesson catalogue from the backend database."""
++    return LessonRepository(db).list_all()
++
++
++@router.get("/{lesson_id}", response_model=LessonResponse)
++def get_lesson(lesson_id: str, db: Session = Depends(get_db)) -> LessonResponse:
++    """Return one lesson by its stable backend id."""
++    lesson = LessonRepository(db).get_by_id(lesson_id)
++    if lesson is None:
++        raise HTTPException(
++            status_code=status.HTTP_404_NOT_FOUND,
++            detail="Lesson not found",
++        )
++    return lesson
+diff --git a/backend/app/schemas/ai.py b/backend/app/schemas/ai.py
+new file mode 100644
+index 0000000..22df1e3
+--- /dev/null
++++ b/backend/app/schemas/ai.py
+@@ -0,0 +1,20 @@
++"""Public API schemas for AI-powered lesson tools."""
++
++from pydantic import BaseModel, ConfigDict, Field
++
++
++class SummarizeLessonRequest(BaseModel):
++    """Request from the Flutter app to summarize a backend lesson."""
++
++    lesson_id: str = Field(alias="lessonId")
++    topic: str | None = None
++
++    model_config = ConfigDict(populate_by_name=True)
++
++
++class SummarizeLessonResponse(BaseModel):
++    summary: str
++
++
++class AIHealthResponse(BaseModel):
++    status: str
+diff --git a/frontend/lib/core/network/api_exception.dart b/frontend/lib/core/network/api_exception.dart
+new file mode 100644
+index 0000000..f77672d
+--- /dev/null
++++ b/frontend/lib/core/network/api_exception.dart
+@@ -0,0 +1,9 @@
++class ApiException implements Exception {
++  final String message;
++  final int? statusCode;
++
++  const ApiException(this.message, {this.statusCode});
++
++  @override
++  String toString() => message;
++}
+diff --git a/frontend/lib/core/router/app_router.dart b/frontend/lib/core/router/app_router.dart
+index cfba3e2..cf51b56 100644
+--- a/frontend/lib/core/router/app_router.dart
++++ b/frontend/lib/core/router/app_router.dart
+@@ -4,7 +4,6 @@ import '../../features/auth/screens/register_screen.dart';
+ import '../../features/home/screens/home_screen.dart';
+ import '../../features/lesson/screens/lesson_screen.dart';
+ import '../../features/ai_tools/screens/ai_hub_screen.dart';
+-import '../../features/ai_tools/screens/ai_screen.dart';
+ import '../../features/ai_tools/screens/quiz_screen.dart';
+ import '../../features/ai_tools/screens/mindmap_screen.dart';
+ import '../../features/ai_tools/screens/flashcard_screen.dart';
+@@ -23,11 +22,11 @@ class AppRouter {
+         builder: (_, state) =>
+             LessonScreen(lessonId: state.pathParameters['id'] ?? '1'),
+       ),
+-      GoRoute(path: '/ai', builder: (_, __) => const AiScreen()),
++      GoRoute(path: '/ai', builder: (_, __) => const AiHubScreen()),
+       GoRoute(
+         path: '/ai/:lessonId',
+         builder: (_, state) =>
+-            AiScreen(lessonId: state.pathParameters['lessonId']),
++            AiHubScreen(lessonId: state.pathParameters['lessonId']),
+       ),
+       GoRoute(path: '/aihub', builder: (_, __) => const AiHubScreen()),
+       GoRoute(
+diff --git a/frontend/lib/features/lesson/models/lesson.dart b/frontend/lib/features/lesson/models/lesson.dart
+new file mode 100644
+index 0000000..192d4fb
+--- /dev/null
++++ b/frontend/lib/features/lesson/models/lesson.dart
+@@ -0,0 +1,25 @@
++class Lesson {
++  final String id;
++  final String title;
++  final String subject;
++  final String icon;
++  final String content;
++
++  const Lesson({
++    required this.id,
++    required this.title,
++    required this.subject,
++    required this.icon,
++    required this.content,
++  });
++
++  factory Lesson.fromJson(Map<String, dynamic> json) {
++    return Lesson(
++      id: json['id']?.toString() ?? '',
++      title: json['title']?.toString() ?? 'Untitled lesson',
++      subject: json['subject']?.toString() ?? 'General',
++      icon: json['icon']?.toString() ?? '📘',
++      content: json['content']?.toString() ?? '',
++    );
++  }
++}
+diff --git a/frontend/lib/features/lesson/providers/lesson_provider.dart b/frontend/lib/features/lesson/providers/lesson_provider.dart
+new file mode 100644
+index 0000000..f0e5dc4
+--- /dev/null
++++ b/frontend/lib/features/lesson/providers/lesson_provider.dart
+@@ -0,0 +1,67 @@
++import 'package:flutter/foundation.dart';
++
++import '../../../core/network/api_exception.dart';
++import '../../../services/api_service.dart';
++import '../models/lesson.dart';
++
++class LessonProvider extends ChangeNotifier {
++  List<Lesson> _lessons = const [];
++  bool _loading = false;
++  String? _errorMessage;
++  bool _hasLoaded = false;
++  bool _backendOnline = false;
++
++  List<Lesson> get lessons => List.unmodifiable(_lessons);
++  bool get loading => _loading;
++  String? get errorMessage => _errorMessage;
++  bool get hasLoaded => _hasLoaded;
++  bool get backendOnline => _backendOnline;
++
++  List<String> get subjects {
++    final values = _lessons.map((lesson) => lesson.subject).toSet().toList();
++    values.sort();
++    return values;
++  }
++
++  Lesson? findById(String id) {
++    for (final lesson in _lessons) {
++      if (lesson.id == id) return lesson;
++    }
++    return null;
++  }
++
++  Future<void> loadLessons({bool force = false}) async {
++    if (_loading) return;
++    if (_hasLoaded && !force) return;
++
++    _loading = true;
++    _errorMessage = null;
++    notifyListeners();
++
++    try {
++      _lessons = await ApiService.getLessons();
++      _hasLoaded = true;
++      _backendOnline = true;
++    } on ApiException catch (error) {
++      _errorMessage = error.message;
++      _backendOnline = false;
++    } finally {
++      _loading = false;
++      notifyListeners();
++    }
++  }
++
++  Future<Lesson> loadLesson(String id) async {
++    final existing = findById(id);
++    if (existing != null) return existing;
++
++    try {
++      final lesson = await ApiService.getLesson(id);
++      _lessons = [..._lessons, lesson];
++      notifyListeners();
++      return lesson;
++    } on ApiException {
++      rethrow;
++    }
++  }
++}

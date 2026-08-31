@@ -1,21 +1,4 @@
-"""
-AI engine HTTP client.
-
-This is the ONLY connection point between your backend and your
-friend's AI engine repo — a plain HTTP client hitting his FastAPI
-service. No RAG logic, no chunking logic, no model code lives here or
-anywhere else in this backend; this file just serializes a request,
-sends it, and deserializes the response.
-
-Used by:
-  - scripts/ingest_ncert_content.py  -> chunk(), embed()
-  - app/services/translation_service.py -> translate()
-  - app/routers/frontend_bridge.py -> summarize()
-  - (cache_lookup() is wired up but unused until you decide whether
-    any endpoint needs a live "ask a question" path — see the note in
-    the last message of this conversation about on-device vs
-    server-proxied Q&A.)
-"""
+"""HTTP client for the separate EduEdge AI engine service."""
 
 import logging
 from typing import TypeVar
@@ -30,6 +13,7 @@ from app.ai_bridge.schemas import (
     ChunkResponse,
     EmbedRequest,
     EmbedResponse,
+    HealthResponse,
     SummarizeRequest,
     SummarizeResponse,
     TranslateRequest,
@@ -43,10 +27,18 @@ ResponseModel = TypeVar("ResponseModel", bound=BaseModel)
 
 
 class AIEngineError(RuntimeError):
-    """Raised when the AI engine is unreachable or returns an error.
-    Callers (ingestion script, translation service, frontend bridge)
-    decide whether to retry, skip, or abort — this client never
-    swallows failures."""
+    """Structured failure returned by, or while contacting, the AI engine."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        detail: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.detail = detail or message
 
 
 class AIEngineClient:
@@ -55,6 +47,9 @@ class AIEngineClient:
             base_url=base_url or settings.ai_engine_base_url,
             timeout=timeout_seconds,
         )
+
+    def health(self) -> HealthResponse:
+        return self._get("/health", HealthResponse)
 
     def chunk(self, request: ChunkRequest) -> ChunkResponse:
         return self._post("/chunk", request, ChunkResponse)
@@ -71,14 +66,74 @@ class AIEngineClient:
     def summarize(self, request: SummarizeRequest) -> SummarizeResponse:
         return self._post("/ai/summarize", request, SummarizeResponse)
 
-    def _post(self, path: str, payload: BaseModel, response_model: type[ResponseModel]) -> ResponseModel:
+    def _get(self, path: str, response_model: type[ResponseModel]) -> ResponseModel:
+        try:
+            response = self._client.get(path)
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise self._status_error(path, exc) from exc
+        except httpx.RequestError as exc:
+            logger.error("AI engine GET %s failed: %s", path, exc)
+            raise AIEngineError(
+                f"Could not reach AI engine at {path}",
+                detail="Could not reach the AI engine process",
+            ) from exc
+
+        return response_model.model_validate(response.json())
+
+    def _post(
+        self,
+        path: str,
+        payload: BaseModel,
+        response_model: type[ResponseModel],
+    ) -> ResponseModel:
         try:
             response = self._client.post(path, json=payload.model_dump())
             response.raise_for_status()
-        except httpx.HTTPError as exc:
-            logger.error("AI engine call to %s failed: %s", path, exc)
-            raise AIEngineError(f"AI engine call to {path} failed") from exc
-        return response_model.model_validate(response.json())
+        except httpx.HTTPStatusError as exc:
+            raise self._status_error(path, exc) from exc
+        except httpx.RequestError as exc:
+            logger.error("AI engine POST %s failed: %s", path, exc)
+            raise AIEngineError(
+                f"Could not reach AI engine at {path}",
+                detail="Could not reach the AI engine process",
+            ) from exc
+
+        try:
+            return response_model.model_validate(response.json())
+        except Exception as exc:
+            logger.error("AI engine returned an invalid response for %s", path)
+            raise AIEngineError(
+                f"Invalid AI engine response from {path}",
+                status_code=response.status_code,
+                detail="AI engine returned an invalid response",
+            ) from exc
+
+    @staticmethod
+    def _status_error(path: str, exc: httpx.HTTPStatusError) -> AIEngineError:
+        response = exc.response
+        detail: str | None = None
+        try:
+            body = response.json()
+            if isinstance(body, dict):
+                raw_detail = body.get("detail")
+                if raw_detail is not None:
+                    detail = str(raw_detail)
+        except ValueError:
+            detail = None
+
+        detail = detail or response.text or f"AI engine returned HTTP {response.status_code}"
+        logger.error(
+            "AI engine call to %s returned HTTP %s: %s",
+            path,
+            response.status_code,
+            detail,
+        )
+        return AIEngineError(
+            f"AI engine call to {path} failed",
+            status_code=response.status_code,
+            detail=detail,
+        )
 
     def close(self) -> None:
         self._client.close()

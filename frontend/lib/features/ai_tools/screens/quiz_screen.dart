@@ -347,10 +347,11 @@ class _QuizScreenState extends State<QuizScreen> {
             ...List.generate(options.length, (i) {
               Color? color;
               if (_answered) {
-                if (i == q['answer'])
+                if (i == q['answer']) {
                   color = Colors.green.shade50;
-                else if (i == _selected)
+                } else if (i == _selected) {
                   color = Colors.red.shade50;
+                }
               }
               return GestureDetector(
                 onTap: () => _answer(i),

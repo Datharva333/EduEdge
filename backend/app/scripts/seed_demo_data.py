@@ -76,12 +76,32 @@ def run() -> None:
     init_sqlite()
     db = SQLiteSessionLocal()
     try:
-        if db.query(Lesson).count() == 0:
-            for data in LESSONS:
+        # Upsert instead of "seed only when empty". During development the
+        # lesson metadata and source_filename mappings evolve; silently keeping
+        # stale rows makes the frontend appear broken even when the code is
+        # correct. Re-running this script now makes SQLite match LESSONS.
+        created = 0
+        updated = 0
+        for data in LESSONS:
+            lesson = db.get(Lesson, data["id"])
+            if lesson is None:
                 db.add(Lesson(**data))
-            logger.info("Seeded %d lessons.", len(LESSONS))
-        else:
-            logger.info("Lessons already exist, skipping.")
+                created += 1
+                continue
+
+            changed = False
+            for field, value in data.items():
+                if getattr(lesson, field) != value:
+                    setattr(lesson, field, value)
+                    changed = True
+            if changed:
+                updated += 1
+
+        logger.info(
+            "Demo lessons synchronized: %d created, %d updated.",
+            created,
+            updated,
+        )
 
         if not db.query(User).filter(User.email == "student@eduedge.com").first():
             db.add(

@@ -3,9 +3,9 @@ Application entrypoint.
 
 Startup sequence:
   1. Create SQLite tables (primary DB — always required).
-  2. Try to create Postgres tables (sync target — optional at boot;
-     the app must still run on SQLite alone if Postgres isn't up yet).
-  3. Launch the background sync loop as an asyncio task.
+  2. If sync is enabled, initialize PostgreSQL and launch the background
+     SQLite -> PostgreSQL sync loop.
+  3. If sync is disabled, run as a local SQLite-only API.
 """
 
 import asyncio
@@ -16,9 +16,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.constants import API_V1_PREFIX
 from app.core.logging_config import configure_logging
+from app.config.settings import settings
 from app.database.postgres import init_postgres
 from app.database.session import init_sqlite
-from app.routers import auth, content_packs, frontend_bridge, progress, sync
+from app.routers import ai, auth, content_packs, frontend_bridge, lessons, progress, sync
 from app.sync.sync_service import sync_loop
 
 configure_logging()
@@ -47,17 +48,20 @@ async def on_startup() -> None:
     init_sqlite()
     logger.info("SQLite ready (primary database)")
 
-    try:
-        init_postgres()
-        logger.info("PostgreSQL ready (sync target)")
-    except Exception:
-        logger.warning(
-            "PostgreSQL not reachable at startup — API will still work "
-            "on SQLite; sync will retry on its own interval.",
-            exc_info=True,
-        )
+    if settings.sync_enabled:
+        try:
+            init_postgres()
+            logger.info("PostgreSQL ready (sync target)")
+        except Exception:
+            logger.warning(
+                "PostgreSQL not reachable at startup — API will still work "
+                "on SQLite; sync will retry on its own interval.",
+                exc_info=True,
+            )
 
-    asyncio.create_task(sync_loop())
+        asyncio.create_task(sync_loop())
+    else:
+        logger.info("PostgreSQL sync disabled for this environment")
 
 
 @app.get("/health", tags=["Health"])
@@ -69,6 +73,8 @@ app.include_router(auth.router, prefix=f"{API_V1_PREFIX}/auth", tags=["Auth"])
 app.include_router(content_packs.router, prefix=f"{API_V1_PREFIX}/content-packs", tags=["Content Packs"])
 app.include_router(progress.router, prefix=f"{API_V1_PREFIX}/progress", tags=["Progress"])
 app.include_router(sync.router, prefix=f"{API_V1_PREFIX}/sync", tags=["Sync"])
+app.include_router(lessons.router, prefix=f"{API_V1_PREFIX}/lessons", tags=["Lessons"])
+app.include_router(ai.router, prefix=f"{API_V1_PREFIX}/ai", tags=["AI"])
 
 # Unprefixed routes matching the frontend's current demo contract
 # (GET /lessons, POST /auth/login, POST /ai/summarize) — see

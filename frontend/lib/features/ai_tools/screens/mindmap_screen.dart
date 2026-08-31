@@ -86,7 +86,7 @@ class MindMapScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: entry.index % 2 == 0
+                        child: entry.key % 2 == 0
                             ? _buildNode(context, entry.value, scheme, true)
                             : const SizedBox(),
                       ),
@@ -96,7 +96,7 @@ class MindMapScreen extends StatelessWidget {
                         color: Colors.grey.shade300,
                       ),
                       Expanded(
-                        child: entry.index % 2 != 0
+                        child: entry.key % 2 != 0
                             ? _buildNode(context, entry.value, scheme, false)
                             : const SizedBox(),
                       ),
@@ -171,8 +171,4 @@ class MindMapScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on MapEntry<int, String> {
-  get index => null;
 }

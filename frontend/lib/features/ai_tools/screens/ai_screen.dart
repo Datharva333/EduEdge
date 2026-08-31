@@ -40,7 +40,7 @@ class _AiScreenState extends State<AiScreen> {
     final result = await ApiService.summarize(_selectedLessonId);
     if (mounted) {
       setState(() {
-        _summary = result ?? 'Could not get summary. Is the backend running?';
+        _summary = result;
         _loading = false;
       });
     }
@@ -59,7 +59,7 @@ class _AiScreenState extends State<AiScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedLessonId,
+              initialValue: _selectedLessonId,
               decoration: const InputDecoration(
                 labelText: 'Select Lesson',
                 border: OutlineInputBorder(),

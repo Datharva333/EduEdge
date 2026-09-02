@@ -8,6 +8,8 @@ Run with: uvicorn api:app --reload --port 8001
 import hashlib
 import json
 import logging
+import time
+
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -250,38 +252,95 @@ class SummarizeResponse(BaseModel):
 
 @app.post("/ai/summarize", response_model=SummarizeResponse)
 def summarize_endpoint(req: SummarizeRequest) -> SummarizeResponse:
+    start = time.perf_counter()
+
+    print(
+        f"[SUMMARY] Starting: {req.filename}",
+        flush=True,
+    )
+
     file_path = Path(DATA_RAW_DIR) / req.filename
 
     if not file_path.is_file():
-        raise HTTPException(status_code=404, detail=f"No such file: {req.filename}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No such file: {req.filename}",
+        )
 
     try:
         with open(file_path, encoding="utf-8") as f:
             json_data = json.load(f)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid JSON in {req.filename}") from e
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid JSON in {req.filename}",
+        ) from e
 
     units = load_parent_units(json_data)
+
+    print(
+        f"[SUMMARY] Loaded {len(units)} content units",
+        flush=True,
+    )
+
     if not units:
-        raise HTTPException(status_code=404, detail="No content found in that file.")
+        raise HTTPException(
+            status_code=404,
+            detail="No content found in that file.",
+        )
 
     if req.topic:
-        # Topic-focused: rerank this chapter's own sections against the
-        # topic and only summarize the most relevant ones -- reduces
-        # hallucination risk vs. dumping the whole chapter, and avoids
-        # padding the LLM's context with irrelevant sections.
         unit_texts = [unit["text"] for unit in units]
-        reranked_ids = re_rank_cross_encoders(req.topic, unit_texts)
-        context = "\n\n".join(unit_texts[i] for i in reranked_ids)
-        user_prompt = f"Summarize what this chapter says about: {req.topic}"
+        reranked_ids = re_rank_cross_encoders(
+            req.topic,
+            unit_texts,
+        )
+
+        context = "\n\n".join(
+            unit_texts[i] for i in reranked_ids
+        )
+
+        user_prompt = (
+            f"Summarize what this chapter says about: {req.topic}"
+        )
     else:
-        # No topic: summarize the whole chapter.
-        context = "\n\n".join(unit["text"] for unit in units)
+        context = "\n\n".join(
+            unit["text"] for unit in units
+        )
+
         user_prompt = "Summarize this chapter for a student."
 
-    summary = "".join(call_llm(
-        context=context,
-        prompt=user_prompt,
-        system=summarize_system_prompt,
-    ))
+    print(
+        f"[SUMMARY] Context length: {len(context)} characters",
+        flush=True,
+    )
+
+    llm_start = time.perf_counter()
+
+    print(
+        "[SUMMARY] Starting LLM generation...",
+        flush=True,
+    )
+
+    summary = "".join(
+        call_llm(
+            context=context,
+            prompt=user_prompt,
+            system=summarize_system_prompt,
+            max_tokens=256,
+        )
+    )
+
+    print(
+        f"[SUMMARY] LLM finished in "
+        f"{time.perf_counter() - llm_start:.2f}s",
+        flush=True,
+    )
+
+    print(
+        f"[SUMMARY] Total request time: "
+        f"{time.perf_counter() - start:.2f}s",
+        flush=True,
+    )
+
     return SummarizeResponse(summary=summary)

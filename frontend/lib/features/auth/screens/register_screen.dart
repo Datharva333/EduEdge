@@ -17,22 +17,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
 
   Future<void> _register() async {
-    if (_nameCtrl.text.isEmpty ||
-        _emailCtrl.text.isEmpty ||
+    if (_nameCtrl.text.trim().isEmpty ||
+        _emailCtrl.text.trim().isEmpty ||
         _passCtrl.text.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 8 characters')),
+        const SnackBar(
+          content: Text(
+            'Enter a name and email, and use a password of at least 8 characters',
+          ),
+        ),
       );
       return;
     }
+
     setState(() => _loading = true);
+
     final ok = await context.read<AuthProvider>().register(
       _nameCtrl.text.trim(),
       _emailCtrl.text.trim(),
-      _passCtrl.text.trim(),
+      _passCtrl.text,
     );
+
+    if (!mounted) return;
+
     setState(() => _loading = false);
-    if (ok && mounted) context.go('/home');
+
+    if (ok) {
+      context.go('/home');
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
   }
 
   @override

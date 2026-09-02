@@ -17,12 +17,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     setState(() => _loading = true);
+
     final ok = await context.read<AuthProvider>().login(
       _emailCtrl.text.trim(),
       _passCtrl.text.trim(),
     );
+
+    if (!mounted) return;
+
     setState(() => _loading = false);
-    if (ok && mounted) context.go('/home');
+
+    if (ok) {
+      context.go('/home');
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
   }
 
   @override

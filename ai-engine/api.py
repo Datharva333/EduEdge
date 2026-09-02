@@ -8,10 +8,13 @@ Run with: uvicorn api:app --reload --port 8001
 import hashlib
 import json
 import logging
+import re
+import time
+
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.chunk import chunk_raw_text
 from app.config import DATA_RAW_DIR, EMBED_MODEL_PATH
@@ -100,6 +103,8 @@ class EmbedResponse(BaseModel):
     model_version: str
     count: int
 
+    model_config = {"protected_namespaces": ()}
+
 
 @app.post("/embed", response_model=EmbedResponse)
 def embed_endpoint(req: EmbedRequest) -> EmbedResponse:
@@ -163,10 +168,46 @@ def _retrieve_context(query: str, lesson_id: str | None = None) -> str:
     return context
 
 
+def _load_source_context(filename: str) -> str:
+    """Load one exact lesson JSON and return its complete normalized context.
+
+    Chat and quiz deliberately use the backend-selected source filename rather
+    than global Chroma retrieval. This guarantees that lesson 1 cannot retrieve
+    content from lesson 2 or lesson 3 and also keeps the demo usable without
+    rebuilding the vector database.
+    """
+    file_path = Path(DATA_RAW_DIR) / filename
+
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=f"No such file: {filename}",
+        )
+
+    try:
+        with open(file_path, encoding="utf-8") as f:
+            json_data = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid JSON in {filename}",
+        ) from exc
+
+    units = load_parent_units(json_data)
+
+    if not units:
+        raise HTTPException(
+            status_code=404,
+            detail="No content found in that file.",
+        )
+
+    return "\n\n".join(unit["text"] for unit in units)
+
+
 # ── /ai/chat ────────────────────────────────────────────────────────
 class ChatRequest(BaseModel):
-    message: str
-    lessonId: str | None = None
+    message: str = Field(min_length=1, max_length=4000)
+    filename: str = Field(min_length=1)
 
 
 class ChatResponse(BaseModel):
@@ -175,15 +216,29 @@ class ChatResponse(BaseModel):
 
 @app.post("/ai/chat", response_model=ChatResponse)
 def chat_endpoint(req: ChatRequest) -> ChatResponse:
-    context = _retrieve_context(req.message, req.lessonId)
-    reply = "".join(call_llm(context=context, prompt=req.message))
+    context = _load_source_context(req.filename)
+
+    reply = "".join(
+        call_llm(
+            context=context,
+            prompt=req.message,
+            max_tokens=384,
+        )
+    ).strip()
+
+    if not reply:
+        raise HTTPException(
+            status_code=502,
+            detail="AI generated an empty reply.",
+        )
+
     return ChatResponse(reply=reply)
 
 
 # ── /ai/quiz ────────────────────────────────────────────────────────
 class QuizRequest(BaseModel):
-    lessonId: str
-    num_questions: int = 5
+    filename: str = Field(min_length=1)
+    num_questions: int = Field(default=5, ge=1, le=10)
 
 
 class QuizQuestion(BaseModel):
@@ -196,32 +251,54 @@ class QuizResponse(BaseModel):
     questions: list[QuizQuestion]
 
 
+def _parse_quiz_json(raw: str) -> dict:
+    text = raw.strip()
+
+    # Small local models occasionally wrap otherwise-valid JSON in a
+    # Markdown fence despite being instructed not to.
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*```$", "", text)
+
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end == -1 or end < start:
+        raise ValueError("No JSON object found in model output")
+
+    return json.loads(text[start : end + 1])
+
+
 @app.post("/ai/quiz", response_model=QuizResponse)
 def quiz_endpoint(req: QuizRequest) -> QuizResponse:
-    # No free-text query to retrieve against here -- lessonId names the
-    # whole lesson, not a specific question. Until retrieval can filter
-    # by lesson (see _retrieve_context's TODO), this uses a generic query
-    # that pulls broadly representative content back from the collection.
-    context = _retrieve_context(
-        query=f"Key concepts and facts covered in this lesson (id: {req.lessonId})",
-        lesson_id=req.lessonId,
+    context = _load_source_context(req.filename)
+
+    raw = "".join(
+        call_llm(
+            context=context,
+            prompt=f"Generate exactly {req.num_questions} quiz questions.",
+            system=quiz_system_prompt,
+            max_tokens=512,
+        )
     )
 
-    raw = "".join(call_llm(
-        context=context,
-        prompt=f"Generate {req.num_questions} quiz questions.",
-        system=quiz_system_prompt,
-    ))
-
     try:
-        parsed = json.loads(raw)
-        return QuizResponse(**parsed)
-    except (json.JSONDecodeError, TypeError, ValueError) as e:
+        parsed = _parse_quiz_json(raw)
+        response = QuizResponse(**parsed)
+    except (json.JSONDecodeError, TypeError, ValueError) as exc:
         logger.error("Quiz generation returned unparseable output: %s", raw)
         raise HTTPException(
             status_code=502,
             detail="Quiz generation failed to produce valid JSON.",
-        ) from e
+        ) from exc
+
+    if len(response.questions) != req.num_questions:
+        logger.warning(
+            "Quiz requested %d questions but model returned %d.",
+            req.num_questions,
+            len(response.questions),
+        )
+
+    return response
 
 
 @app.get("/health")
@@ -250,38 +327,95 @@ class SummarizeResponse(BaseModel):
 
 @app.post("/ai/summarize", response_model=SummarizeResponse)
 def summarize_endpoint(req: SummarizeRequest) -> SummarizeResponse:
+    start = time.perf_counter()
+
+    print(
+        f"[SUMMARY] Starting: {req.filename}",
+        flush=True,
+    )
+
     file_path = Path(DATA_RAW_DIR) / req.filename
 
     if not file_path.is_file():
-        raise HTTPException(status_code=404, detail=f"No such file: {req.filename}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No such file: {req.filename}",
+        )
 
     try:
         with open(file_path, encoding="utf-8") as f:
             json_data = json.load(f)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid JSON in {req.filename}") from e
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid JSON in {req.filename}",
+        ) from e
 
     units = load_parent_units(json_data)
+
+    print(
+        f"[SUMMARY] Loaded {len(units)} content units",
+        flush=True,
+    )
+
     if not units:
-        raise HTTPException(status_code=404, detail="No content found in that file.")
+        raise HTTPException(
+            status_code=404,
+            detail="No content found in that file.",
+        )
 
     if req.topic:
-        # Topic-focused: rerank this chapter's own sections against the
-        # topic and only summarize the most relevant ones -- reduces
-        # hallucination risk vs. dumping the whole chapter, and avoids
-        # padding the LLM's context with irrelevant sections.
         unit_texts = [unit["text"] for unit in units]
-        reranked_ids = re_rank_cross_encoders(req.topic, unit_texts)
-        context = "\n\n".join(unit_texts[i] for i in reranked_ids)
-        user_prompt = f"Summarize what this chapter says about: {req.topic}"
+        reranked_ids = re_rank_cross_encoders(
+            req.topic,
+            unit_texts,
+        )
+
+        context = "\n\n".join(
+            unit_texts[i] for i in reranked_ids
+        )
+
+        user_prompt = (
+            f"Summarize what this chapter says about: {req.topic}"
+        )
     else:
-        # No topic: summarize the whole chapter.
-        context = "\n\n".join(unit["text"] for unit in units)
+        context = "\n\n".join(
+            unit["text"] for unit in units
+        )
+
         user_prompt = "Summarize this chapter for a student."
 
-    summary = "".join(call_llm(
-        context=context,
-        prompt=user_prompt,
-        system=summarize_system_prompt,
-    ))
+    print(
+        f"[SUMMARY] Context length: {len(context)} characters",
+        flush=True,
+    )
+
+    llm_start = time.perf_counter()
+
+    print(
+        "[SUMMARY] Starting LLM generation...",
+        flush=True,
+    )
+
+    summary = "".join(
+        call_llm(
+            context=context,
+            prompt=user_prompt,
+            system=summarize_system_prompt,
+            max_tokens=256,
+        )
+    )
+
+    print(
+        f"[SUMMARY] LLM finished in "
+        f"{time.perf_counter() - llm_start:.2f}s",
+        flush=True,
+    )
+
+    print(
+        f"[SUMMARY] Total request time: "
+        f"{time.perf_counter() - start:.2f}s",
+        flush=True,
+    )
+
     return SummarizeResponse(summary=summary)

@@ -20,156 +20,69 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       case '1':
         return [
           {
-            'front': 'What is Matter?',
-            'back':
-                'Anything that has mass and occupies space. Exists in three states: solid, liquid, and gas.',
+            'front': 'What is the standard form of a quadratic equation?',
+            'back': 'ax² + bx + c = 0, where a ≠ 0.',
           },
           {
-            'front': 'What is the process of solid converting to liquid?',
-            'back':
-                'Melting. The temperature at which this occurs is called the melting point.',
+            'front': 'What is the discriminant?',
+            'back': 'D = b² - 4ac. It determines the nature of the roots.',
           },
           {
-            'front': 'What happens to particles in a gas?',
-            'back':
-                'Particles are very far apart, move rapidly, and have neither fixed shape nor volume.',
+            'front': 'What is the quadratic formula?',
+            'back': 'x = (-b ± √(b² - 4ac)) / (2a)',
           },
           {
-            'front': 'What is evaporation?',
-            'back':
-                'The conversion of liquid to gas. Occurs at the surface of a liquid at any temperature.',
+            'front': 'What does D = 0 mean?',
+            'back': 'The quadratic equation has two equal real roots.',
           },
         ];
-      case '4':
+      case '2':
         return [
           {
-            'front': 'What is a cell?',
+            'front': 'What is a mixture?',
             'back':
-                'The basic structural and functional unit of life. All living things are made of cells.',
+                'Two or more substances physically combined in any proportion without a chemical change.',
           },
           {
-            'front': 'Who discovered cells?',
+            'front': 'What is a solution?',
             'back':
-                'Robert Hooke in 1665, when he observed cork under a microscope.',
+                'A homogeneous mixture consisting of a solute dissolved in a solvent.',
           },
           {
-            'front': 'What is the powerhouse of the cell?',
+            'front': 'What is the Tyndall effect?',
             'back':
-                'Mitochondria. It produces energy through cellular respiration.',
+                'The scattering of light by particles in a colloid or suspension.',
           },
           {
-            'front': 'What do plant cells have that animal cells don\'t?',
-            'back': 'Cell wall, chloroplasts, and a large central vacuole.',
+            'front': 'How is a compound different from a mixture?',
+            'back':
+                'A compound has elements chemically combined in a fixed proportion; a mixture does not.',
           },
         ];
-      case '5':
+      case '3':
         return [
           {
-            'front': 'What is Speed?',
-            'back':
-                'Distance covered per unit time. Speed = Distance / Time. It is a scalar quantity.',
+            'front': 'What does a tense show?',
+            'back': 'The time of an action, event, or state.',
           },
           {
-            'front': 'What is Velocity?',
-            'back':
-                'Displacement per unit time. It has both magnitude and direction — a vector quantity.',
+            'front': 'When is the simple present used?',
+            'back': 'For habits, routines, repeated actions, and general truths.',
           },
           {
-            'front': 'First equation of motion',
-            'back':
-                'v = u + at\nwhere v = final velocity, u = initial velocity, a = acceleration, t = time',
+            'front': 'When is the simple past used?',
+            'back': 'For actions that were completed in the past.',
           },
           {
-            'front': 'What is Acceleration?',
-            'back':
-                'Rate of change of velocity. a = (v - u) / t. Can be positive (speeding up) or negative (slowing down).',
-          },
-        ];
-      case '7':
-        return [
-          {
-            'front': 'When did the French Revolution begin?',
-            'back':
-                '1789. The storming of the Bastille on July 14, 1789 is considered the symbolic start.',
-          },
-          {
-            'front': 'What were the three estates of French society?',
-            'back':
-                'First Estate: Clergy\nSecond Estate: Nobility\nThird Estate: Everyone else (peasants, merchants, workers)',
-          },
-          {
-            'front': 'What were the ideals of the French Revolution?',
-            'back':
-                'Liberty, Equality, Fraternity (Liberté, Égalité, Fraternité)',
-          },
-          {
-            'front': 'Who rose to power after the French Revolution?',
-            'back':
-                'Napoleon Bonaparte, who used the revolutionary chaos to become Emperor of France.',
-          },
-        ];
-      case '9':
-        return [
-          {
-            'front': 'When did India gain independence?',
-            'back':
-                'August 15, 1947. The partition of India and Pakistan also occurred on this date.',
-          },
-          {
-            'front': 'What was the Dandi March?',
-            'back':
-                'Gandhi\'s 240-mile walk to the sea in 1930 to make salt and protest the British salt tax. It launched the Civil Disobedience Movement.',
-          },
-          {
-            'front': 'What was the Quit India Movement?',
-            'back':
-                'Launched in 1942, it demanded immediate end to British rule in India. Gandhi gave the "Do or Die" call.',
-          },
-          {
-            'front': 'When was the Indian National Congress founded?',
-            'back':
-                '1885. It became the primary organization leading India\'s independence movement.',
-          },
-        ];
-      case '11':
-        return [
-          {
-            'front': 'Who wrote "The Fun They Had"?',
-            'back':
-                'Isaac Asimov. It is a science fiction short story set in the year 2157.',
-          },
-          {
-            'front': 'Who are the main characters in "The Fun They Had"?',
-            'back':
-                'Margie and Tommy — two children in the future who learn about old-style schools.',
-          },
-          {
-            'front': 'What is the main theme of "The Fun They Had"?',
-            'back':
-                'The contrast between cold, isolated future learning (mechanical teachers) and the warm, social learning of the past (human teachers in classrooms).',
-          },
-          {
-            'front': 'What did Tommy find in "The Fun They Had"?',
-            'back':
-                'A real printed book — something extraordinary in 2157 when all learning was digital.',
+            'front': 'How is the simple future commonly formed?',
+            'back': 'With will followed by the base form of the verb.',
           },
         ];
       default:
         return [
           {
-            'front': 'What is EduEdge?',
-            'back':
-                'An offline-first AI learning platform for rural students that works without internet.',
-          },
-          {
-            'front': 'What subjects does EduEdge cover?',
-            'back':
-                'Science, History, and English for CBSE Class 9-10 students.',
-          },
-          {
-            'front': 'What AI features does EduEdge have?',
-            'back':
-                'AI Summarizer, Quiz Generator, Flashcards, Mind Maps, and Socratic Tutor chat.',
+            'front': 'No flashcards available',
+            'back': 'Return to the AI Hub and select an available lesson.',
           },
         ];
     }

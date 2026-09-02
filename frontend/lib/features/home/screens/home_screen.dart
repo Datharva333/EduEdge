@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../services/api_service.dart';
-import '../../../services/mock_service.dart';
+
 import '../../auth/providers/auth_provider.dart';
+import '../../lesson/models/lesson.dart';
+import '../../lesson/providers/lesson_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,33 +14,37 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _loading = true;
-  bool _offline = false;
   String _selectedSubject = 'All';
 
   @override
   void initState() {
     super.initState();
-    _checkBackend();
-  }
-
-  Future<void> _checkBackend() async {
-    final online = await ApiService.isBackendUp();
-    setState(() {
-      _offline = !online;
-      _loading = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LessonProvider>().loadLessons();
     });
   }
 
-  List<Map<String, dynamic>> get _filteredLessons {
-    if (_selectedSubject == 'All') return MockService.lessons;
-    return MockService.getLessonsBySubject(_selectedSubject);
+  List<Lesson> _filteredLessons(LessonProvider provider) {
+    if (_selectedSubject == 'All') return provider.lessons;
+    return provider.lessons
+        .where((lesson) => lesson.subject == _selectedSubject)
+        .toList(growable: false);
+  }
+
+  Future<void> _refresh() async {
+    await context.read<LessonProvider>().loadLessons(force: true);
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().userName;
+    final lessons = context.watch<LessonProvider>();
     final scheme = Theme.of(context).colorScheme;
+
+    if (_selectedSubject != 'All' &&
+        !lessons.subjects.contains(_selectedSubject)) {
+      _selectedSubject = 'All';
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -58,107 +63,138 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (_offline)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.offline_bolt,
-                          color: Colors.orange,
-                          size: 16,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Offline mode - showing cached lessons',
-                          style: TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ActionTile(
-                        icon: Icons.auto_awesome,
-                        label: 'AI Hub',
-                        color: scheme.primary,
-                        onTap: () => context.push('/aihub'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _ActionTile(
-                        icon: Icons.offline_bolt,
-                        label: _offline ? 'Offline' : 'Online',
-                        color: _offline ? Colors.orange : Colors.teal,
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _offline
-                                    ? 'Offline mode - showing cached lessons'
-                                    : 'You are online',
-                              ),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Subjects',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _SubjectChip(
-                        label: 'All',
-                        selected: _selectedSubject == 'All',
-                        onTap: () => setState(() => _selectedSubject = 'All'),
-                      ),
-                      ...MockService.subjects.map(
-                        (s) => _SubjectChip(
-                          label: '${s['icon']} ${s['name']}',
-                          selected: _selectedSubject == s['name'],
-                          onTap: () =>
-                              setState(() => _selectedSubject = s['name']),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '${_filteredLessons.length} Lessons',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ..._filteredLessons.map((l) => _LessonCard(lesson: l)),
-              ],
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: _buildBody(context, lessons, scheme),
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    LessonProvider provider,
+    ColorScheme scheme,
+  ) {
+    if (provider.loading && !provider.hasLoaded) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 240),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
+    }
+
+    if (provider.errorMessage != null && provider.lessons.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
+        children: [
+          const SizedBox(height: 100),
+          Icon(Icons.cloud_off, size: 48, color: Colors.grey.shade500),
+          const SizedBox(height: 16),
+          Text(
+            'Could not load lessons',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            provider.errorMessage!,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: FilledButton.icon(
+              onPressed: _refresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
             ),
+          ),
+        ],
+      );
+    }
+
+    final filteredLessons = _filteredLessons(provider);
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ActionTile(
+                icon: Icons.auto_awesome,
+                label: 'AI Hub',
+                color: scheme.primary,
+                onTap: () => context.push('/aihub'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionTile(
+                icon: provider.backendOnline
+                    ? Icons.cloud_done_outlined
+                    : Icons.cloud_off_outlined,
+                label: provider.backendOnline ? 'Connected' : 'Offline',
+                color: provider.backendOnline ? Colors.teal : Colors.orange,
+                onTap: _refresh,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Subjects',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _SubjectChip(
+                label: 'All',
+                selected: _selectedSubject == 'All',
+                onTap: () => setState(() => _selectedSubject = 'All'),
+              ),
+              ...provider.subjects.map(
+                (subject) => _SubjectChip(
+                  label: subject,
+                  selected: _selectedSubject == subject,
+                  onTap: () => setState(() => _selectedSubject = subject),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          '${filteredLessons.length} Lessons',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (filteredLessons.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Text(
+              'No lessons available for this subject.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          )
+        else
+          ...filteredLessons.map((lesson) => _LessonCard(lesson: lesson)),
+      ],
     );
   }
 }
@@ -224,7 +260,13 @@ class _ActionTile extends StatelessWidget {
             children: [
               Icon(icon, color: color),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             ],
           ),
         ),
@@ -234,7 +276,8 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _LessonCard extends StatelessWidget {
-  final Map<String, dynamic> lesson;
+  final Lesson lesson;
+
   const _LessonCard({required this.lesson});
 
   @override
@@ -244,15 +287,15 @@ class _LessonCard extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
-          child: Text(lesson['icon'], style: const TextStyle(fontSize: 18)),
+          child: Text(lesson.icon, style: const TextStyle(fontSize: 18)),
         ),
         title: Text(
-          lesson['title'],
+          lesson.title,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text('${lesson['subject']} • Class ${lesson['class']}'),
+        subtitle: Text(lesson.subject),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-        onTap: () => context.push('/lesson/${lesson['id']}'),
+        onTap: () => context.push('/lesson/${lesson.id}'),
       ),
     );
   }

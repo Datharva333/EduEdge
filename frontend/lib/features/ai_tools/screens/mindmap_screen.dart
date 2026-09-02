@@ -9,32 +9,32 @@ class MindMapScreen extends StatelessWidget {
     switch (id) {
       case '1':
         return {
-          'Photosynthesis': [
-            'Sunlight → Energy',
-            'CO2 + Water → Glucose',
-            'Chlorophyll captures light',
-            'Produces Oxygen',
-            'Happens in leaves',
+          'Quadratic Equations': [
+            'Standard form: ax² + bx + c = 0',
+            'Discriminant: b² - 4ac',
+            'Quadratic formula',
+            'Nature of roots',
+            'Parabola and x-intercepts',
           ],
         };
       case '2':
         return {
-          "Newton's Laws": [
-            'Law 1: Inertia',
-            'Law 2: F = ma',
-            'Law 3: Action = Reaction',
-            'Foundation of mechanics',
-            'Applies to all objects',
+          'Is Matter Around Us Pure?': [
+            'Homogeneous and heterogeneous mixtures',
+            'Solutions: solute + solvent',
+            'Suspensions',
+            'Colloids and Tyndall effect',
+            'Elements and compounds',
           ],
         };
       case '3':
         return {
-          'World War II': [
-            '1939 - 1945',
-            'Germany invaded Poland',
-            'Battle of Britain',
-            'D-Day 1944',
-            'Atomic bombs 1945',
+          'Grammar — Tenses': [
+            'Present tense',
+            'Past tense',
+            'Future time',
+            'Simple forms',
+            'Continuous forms',
           ],
         };
       default:
@@ -86,7 +86,7 @@ class MindMapScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: entry.index % 2 == 0
+                        child: entry.key % 2 == 0
                             ? _buildNode(context, entry.value, scheme, true)
                             : const SizedBox(),
                       ),
@@ -96,7 +96,7 @@ class MindMapScreen extends StatelessWidget {
                         color: Colors.grey.shade300,
                       ),
                       Expanded(
-                        child: entry.index % 2 != 0
+                        child: entry.key % 2 != 0
                             ? _buildNode(context, entry.value, scheme, false)
                             : const SizedBox(),
                       ),
@@ -171,8 +171,4 @@ class MindMapScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on MapEntry<int, String> {
-  get index => null;
 }

@@ -22,52 +22,42 @@ logger = logging.getLogger(__name__)
 LESSONS = [
     {
         "id": "1",
-        "title": "Introduction to Photosynthesis",
-        "subject": "Biology",
-        "icon": "🌿",
+        "title": "Quadratic Equations",
+        "subject": "Mathematics",
+        "icon": "📐",
         "content": (
-            "Photosynthesis is the process by which green plants convert "
-            "sunlight into food. Plants absorb carbon dioxide from the air "
-            "and water from the soil. Using energy from sunlight, they "
-            "convert these into glucose and oxygen. The equation is: "
-            "6CO2 + 6H2O + light → C6H12O6 + 6O2. Chlorophyll in the leaves "
-            "captures the light energy needed for this process."
+            "A quadratic equation is an equation of degree two, usually written "
+            "as ax² + bx + c = 0 where a is not zero. The discriminant "
+            "b² - 4ac determines the nature of its roots, and the roots can be "
+            "calculated using the quadratic formula."
         ),
-        # NOTE: no real matching file on the AI engine yet — this will
-        # 404 from /ai/summarize until Navin adds a biology JSON file
-        # under ai-engine/data/raw/. Swap in the real path then.
-        "source_filename": "biology/photosynthesis.json",
+        "source_filename": "maths/test_math_sample.json",
     },
     {
         "id": "2",
         "title": "Is Matter Around Us Pure?",
         "subject": "Science",
-        "icon": "⚡",
+        "icon": "⚗️",
         "content": (
-            "Matter around us can be classified as pure substances or "
-            "mixtures. Mixtures can be homogeneous (like solutions) or "
-            "heterogeneous (like suspensions and colloids). This chapter "
-            "covers solutions, concentration, the Tyndall effect, and how "
-            "elements and compounds differ from mixtures."
+            "Matter around us can be classified as pure substances or mixtures. "
+            "Mixtures may be homogeneous or heterogeneous. This chapter covers "
+            "solutions, concentration, suspensions, colloids, the Tyndall effect, "
+            "elements, compounds, and mixtures."
         ),
-        # This is the ONE file that actually exists right now under
-        # ai-engine/data/raw/, so use lesson "2" for end-to-end testing.
         "source_filename": "science/matter_around_us_pure.json",
     },
     {
         "id": "3",
-        "title": "World War II Overview",
-        "subject": "History",
-        "icon": "📖",
+        "title": "Grammar — Tenses",
+        "subject": "English",
+        "icon": "✏️",
         "content": (
-            "World War II was a global conflict from 1939 to 1945. It "
-            "involved most of the world's nations and was the deadliest "
-            "conflict in history. The war began with Germany's invasion of "
-            "Poland. Key events include the Battle of Britain, D-Day, and "
-            "the atomic bombings of Hiroshima and Nagasaki."
+            "Tenses are verb forms that show when an action or state occurs. "
+            "English commonly groups tenses into present, past, and future, with "
+            "forms used for habits, completed actions, continuing actions, and "
+            "events expected to happen later."
         ),
-        # Same caveat as lesson "1" — placeholder until real content exists.
-        "source_filename": "history/world_war_2.json",
+        "source_filename": "english/tenses.json",
     },
 ]
 

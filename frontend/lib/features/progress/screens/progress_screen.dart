@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../auth/providers/auth_provider.dart';
-import '../../../services/mock_service.dart';
+import '../../lesson/providers/lesson_provider.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -9,7 +10,8 @@ class ProgressScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().userName;
-    final lessons = MockService.lessons;
+    final lessonProvider = context.watch<LessonProvider>();
+    final lessons = lessonProvider.lessons;
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -60,7 +62,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: _StatCard(
                   label: 'Quizzes',
                   value: '0',
@@ -69,7 +71,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: _StatCard(
                   label: 'Streak',
                   value: '1',
@@ -87,42 +89,56 @@ class ProgressScreen extends StatelessWidget {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          ...lessons.map(
-            (l) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+          if (lessons.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                lessonProvider.loading
+                    ? 'Loading lessons...'
+                    : 'No lessons are currently loaded.',
+                textAlign: TextAlign.center,
               ),
-              child: Row(
-                children: [
-                  Text(l['icon'], style: const TextStyle(fontSize: 24)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l['title'],
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          l['subject'],
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
+            )
+          else
+            ...lessons.map(
+              (lesson) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Text(lesson.icon, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lesson.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                        ),
-                      ],
+                          Text(
+                            lesson.subject,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(Icons.check_circle_outline, color: Colors.grey.shade400),
-                ],
+                    Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

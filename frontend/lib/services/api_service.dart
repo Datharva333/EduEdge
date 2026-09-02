@@ -12,8 +12,8 @@ class ApiService {
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 180),
-        sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 330),
+        sendTimeout: const Duration(seconds: 60),
         headers: const {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -67,17 +67,17 @@ class ApiService {
     String password,
   ) async {
     try {
-      final response = await _dio.post(
+      await _dio.post(
         ApiConstants.register,
         data: {'full_name': name, 'email': email, 'password': password},
       );
-      final data = Map<String, dynamic>.from(response.data as Map);
-      return {
-        'token': data['access_token'] ?? '',
-        'user': {'name': name},
-      };
+
+      // /api/v1/auth/register returns the created user, not a JWT.
+      // Sign in immediately so AuthProvider receives a real token.
+      return await login(email, password);
     } on DioException catch (error) {
-      if (error.response?.statusCode == 400) {
+      if (error.response?.statusCode == 400 ||
+          error.response?.statusCode == 409) {
         return {'error': _messageFromDio(error, 'Email already registered')};
       }
       return {'error': _messageFromDio(error, 'Registration failed')};
@@ -89,11 +89,15 @@ class ApiService {
       final response = await _dio.get(ApiConstants.lessons);
       final data = response.data;
       if (data is! List) {
-        throw const ApiException('Backend returned an invalid lessons response');
+        throw const ApiException(
+          'Backend returned an invalid lessons response',
+        );
       }
 
       return data
-          .map((item) => Lesson.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => Lesson.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList(growable: false);
     } on DioException catch (error) {
       throw _asApiException(error, fallback: 'Could not load lessons');
@@ -112,10 +116,7 @@ class ApiService {
     }
   }
 
-  static Future<String> summarize(
-    String lessonId, {
-    String? topic,
-  }) async {
+  static Future<String> summarize(String lessonId, {String? topic}) async {
     try {
       final response = await _dio.post(
         ApiConstants.summarize,
@@ -143,9 +144,41 @@ class ApiService {
     try {
       final response = await _dio.post(
         ApiConstants.quiz,
-        data: {'lessonId': lessonId},
+        data: {'lessonId': lessonId, 'num_questions': 5},
       );
-      return List<Map<String, dynamic>>.from(response.data['questions']);
+
+      final data = response.data;
+      if (data is! Map || data['questions'] is! List) {
+        return null;
+      }
+
+      final questions = <Map<String, dynamic>>[];
+
+      for (final raw in data['questions'] as List) {
+        if (raw is! Map) return null;
+
+        final item = Map<String, dynamic>.from(raw);
+        final question = item['question'];
+        final options = item['options'];
+        final correctIndex = item['correct_index'];
+
+        if (question is! String ||
+            options is! List ||
+            correctIndex is! int ||
+            options.length != 4) {
+          return null;
+        }
+
+        questions.add({
+          'q': question,
+          'options': options
+              .map((option) => option.toString())
+              .toList(growable: false),
+          'answer': correctIndex,
+        });
+      }
+
+      return questions;
     } on DioException {
       return null;
     }
@@ -157,7 +190,14 @@ class ApiService {
         ApiConstants.chat,
         data: {'message': message, 'lessonId': lessonId},
       );
-      return response.data['reply'];
+
+      final data = response.data;
+      if (data is! Map || data['reply'] is! String) {
+        return null;
+      }
+
+      final reply = (data['reply'] as String).trim();
+      return reply.isEmpty ? null : reply;
     } on DioException {
       return null;
     }

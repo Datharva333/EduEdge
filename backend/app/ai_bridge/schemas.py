@@ -57,6 +57,8 @@ class EmbedResponse(BaseModel):
     model_version: str
     count: int
 
+    model_config = {"protected_namespaces": ()}
+
 
 # ── /cache/lookup ─────────────────────────────────────────────────
 class CacheLookupRequest(BaseModel):
@@ -79,6 +81,32 @@ class TranslateRequest(BaseModel):
 
 class TranslateResponse(BaseModel):
     translated_text: str
+
+
+# ── /ai/chat ─────────────────────────────────────────────────────────
+class ChatRequest(BaseModel):
+    message: str
+    filename: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
+# ── /ai/quiz ─────────────────────────────────────────────────────────
+class QuizRequest(BaseModel):
+    filename: str
+    num_questions: int = 5
+
+
+class QuizQuestion(BaseModel):
+    question: str
+    options: list[str]
+    correct_index: int
+
+
+class QuizResponse(BaseModel):
+    questions: list[QuizQuestion]
 
 
 # ── /ai/summarize ────────────────────────────────────────────────────

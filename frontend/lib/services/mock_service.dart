@@ -1,50 +1,42 @@
 class MockService {
   static final List<Map<String, dynamic>> subjects = [
-    {'id': 'science', 'name': 'Science', 'icon': '🔬', 'color': '0xFF5C6BC0'},
-    {'id': 'history', 'name': 'History', 'icon': '📖', 'color': '0xFF8D6E63'},
-    {'id': 'english', 'name': 'English', 'icon': '📝', 'color': '0xFF26A69A'},
+    {'id': 'maths', 'name': 'Mathematics', 'icon': '📐', 'color': '0xFF5C6BC0'},
+    {'id': 'science', 'name': 'Science', 'icon': '⚗️', 'color': '0xFF26A69A'},
+    {'id': 'english', 'name': 'English', 'icon': '✏️', 'color': '0xFF8D6E63'},
   ];
 
   static final List<Map<String, dynamic>> lessons = [
-    // SCIENCE — Class 9
     {
       'id': '1',
-      'title': 'Matter in Our Surroundings',
+      'title': 'Quadratic Equations',
+      'subject': 'Mathematics',
+      'class': '10',
+      'icon': '📐',
+      'content':
+          'A quadratic equation has degree two and can be written as ax² + bx + c = 0, where a is not zero. '
+          'Its roots can be found using factorisation, completing the square, or the quadratic formula. '
+          'The discriminant b² - 4ac determines whether the roots are distinct real roots, equal real roots, or complex roots.',
+    },
+    {
+      'id': '2',
+      'title': 'Is Matter Around Us Pure?',
       'subject': 'Science',
       'class': '9',
       'icon': '⚗️',
       'content':
-          'Matter is anything that has mass and occupies space. Matter exists in three states: solid, liquid, and gas. '
-          'In solids, particles are tightly packed and have a fixed shape and volume. '
-          'In liquids, particles are loosely packed and have a fixed volume but no fixed shape. '
-          'In gases, particles are very far apart and have neither fixed shape nor volume. '
-          'Matter can change from one state to another by absorbing or releasing heat energy. '
-          'The process of conversion of solid to liquid is called melting, liquid to gas is called evaporation, '
-          'and gas to liquid is called condensation. '
-          'The temperature at which a solid melts is called its melting point, '
-          'and the temperature at which a liquid boils is called its boiling point.',
-    },
-    {
-      'id': '2',
-      'title': 'Quadratic Equations',
-      'subject': 'Mathematics',
-      'class': '10',
+          'Matter may be a pure substance or a mixture. Mixtures may be homogeneous or heterogeneous. '
+          'Solutions, suspensions and colloids differ in particle size, stability, filtration behaviour and the Tyndall effect. '
+          'Elements and compounds are pure substances, while mixtures contain substances physically combined.',
     },
     {
       'id': '3',
-      'title': 'Atoms and Molecules',
-      'subject': 'Science',
+      'title': 'Grammar — Tenses',
+      'subject': 'English',
       'class': '9',
-      'icon': '⚛️',
+      'icon': '✏️',
       'content':
-          'All matter is made up of tiny particles called atoms. '
-          'An atom is the smallest particle of an element that can take part in a chemical reaction. '
-          'Atoms are extremely small — one atom of hydrogen has a mass of 1.67 × 10⁻²⁴ grams. '
-          'A molecule is formed when two or more atoms combine. '
-          'Molecules of an element contain the same kind of atoms, like O2 and H2. '
-          'Molecules of a compound contain different kinds of atoms, like H2O and CO2. '
-          'The atomic mass of an element is the relative mass of its atom compared to the mass of a carbon-12 atom. '
-          'Avogadro\'s number (6.022 × 10²³) is the number of atoms or molecules in one mole of a substance.',
+          'Tenses show the time of an action or state. English tenses are mainly organised around present, past and future time. '
+          'Different forms are used for habits, completed actions and actions that are continuing.',
     },
     {
       'id': '4',

@@ -1,0 +1,66 @@
+{
+  "subject": "English",
+  "chapter": "Grammar — Tenses",
+  "sections": [
+    {
+      "section_title": "Understanding Tenses",
+      "subsections": [
+        {
+          "subsection_title": "What is a Tense?",
+          "content_type": "definition",
+          "text": "A tense is a form of a verb that indicates the time of an action, event, or state. English tenses are mainly grouped into present, past, and future. The choice of tense helps a reader understand when something happens and whether the action is regular, completed, continuing, or expected."
+        },
+        {
+          "subsection_title": "The Three Main Time Divisions",
+          "content_type": "prose",
+          "text": "Present tense describes actions or states connected with the present. Past tense describes actions or states before the present time. Future forms describe actions or states expected after the present time."
+        }
+      ]
+    },
+    {
+      "section_title": "Present Tense",
+      "subsections": [
+        {
+          "subsection_title": "Simple Present",
+          "content_type": "prose",
+          "text": "The simple present is used for habits, routines, general truths, and repeated actions. Examples include 'She reads every day' and 'Water boils at 100 degrees Celsius.' With he, she, or it, the verb commonly takes -s or -es."
+        },
+        {
+          "subsection_title": "Present Continuous",
+          "content_type": "prose",
+          "text": "The present continuous describes an action happening now or around the present time. It is formed with am, is, or are followed by the -ing form of the verb. For example: 'They are studying for the examination.'"
+        }
+      ]
+    },
+    {
+      "section_title": "Past Tense",
+      "subsections": [
+        {
+          "subsection_title": "Simple Past",
+          "content_type": "prose",
+          "text": "The simple past describes a completed action in the past. Regular verbs commonly take -ed, while irregular verbs may change form. Examples include 'She visited Delhi last year' and 'He wrote a letter yesterday.'"
+        },
+        {
+          "subsection_title": "Past Continuous",
+          "content_type": "prose",
+          "text": "The past continuous describes an action that was in progress at a particular time in the past. It is formed with was or were followed by the -ing form. Example: 'They were playing when it started to rain.'"
+        }
+      ]
+    },
+    {
+      "section_title": "Future Time",
+      "subsections": [
+        {
+          "subsection_title": "Simple Future",
+          "content_type": "prose",
+          "text": "The simple future is commonly formed with will followed by the base form of the verb. It is used for predictions, decisions, promises, and future events. Example: 'I will finish the assignment tomorrow.'"
+        },
+        {
+          "subsection_title": "Choosing the Correct Tense",
+          "content_type": "prose",
+          "text": "The correct tense depends on both time and meaning. Words such as every day, yesterday, now, while, and tomorrow often provide useful clues, but the complete sentence must be considered before choosing a tense."
+        }
+      ]
+    }
+  ]
+}

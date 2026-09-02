@@ -9,11 +9,15 @@ from pydantic import BaseModel
 from app.ai_bridge.schemas import (
     CacheLookupRequest,
     CacheLookupResponse,
+    ChatRequest,
+    ChatResponse,
     ChunkRequest,
     ChunkResponse,
     EmbedRequest,
     EmbedResponse,
     HealthResponse,
+    QuizRequest,
+    QuizResponse,
     SummarizeRequest,
     SummarizeResponse,
     TranslateRequest,
@@ -42,7 +46,7 @@ class AIEngineError(RuntimeError):
 
 
 class AIEngineClient:
-    def __init__(self, base_url: str | None = None, timeout_seconds: float = 120.0):
+    def __init__(self, base_url: str | None = None, timeout_seconds: float = 300.0):
         self._client = httpx.Client(
             base_url=base_url or settings.ai_engine_base_url,
             timeout=timeout_seconds,
@@ -62,6 +66,12 @@ class AIEngineClient:
 
     def translate(self, request: TranslateRequest) -> TranslateResponse:
         return self._post("/translate", request, TranslateResponse)
+
+    def chat(self, request: ChatRequest) -> ChatResponse:
+        return self._post("/ai/chat", request, ChatResponse)
+
+    def quiz(self, request: QuizRequest) -> QuizResponse:
+        return self._post("/ai/quiz", request, QuizResponse)
 
     def summarize(self, request: SummarizeRequest) -> SummarizeResponse:
         return self._post("/ai/summarize", request, SummarizeResponse)

@@ -9,32 +9,32 @@ class MindMapScreen extends StatelessWidget {
     switch (id) {
       case '1':
         return {
-          'Photosynthesis': [
-            'Sunlight → Energy',
-            'CO2 + Water → Glucose',
-            'Chlorophyll captures light',
-            'Produces Oxygen',
-            'Happens in leaves',
+          'Quadratic Equations': [
+            'Standard form: ax² + bx + c = 0',
+            'Discriminant: b² - 4ac',
+            'Quadratic formula',
+            'Nature of roots',
+            'Parabola and x-intercepts',
           ],
         };
       case '2':
         return {
-          "Newton's Laws": [
-            'Law 1: Inertia',
-            'Law 2: F = ma',
-            'Law 3: Action = Reaction',
-            'Foundation of mechanics',
-            'Applies to all objects',
+          'Is Matter Around Us Pure?': [
+            'Homogeneous and heterogeneous mixtures',
+            'Solutions: solute + solvent',
+            'Suspensions',
+            'Colloids and Tyndall effect',
+            'Elements and compounds',
           ],
         };
       case '3':
         return {
-          'World War II': [
-            '1939 - 1945',
-            'Germany invaded Poland',
-            'Battle of Britain',
-            'D-Day 1944',
-            'Atomic bombs 1945',
+          'Grammar — Tenses': [
+            'Present tense',
+            'Past tense',
+            'Future time',
+            'Simple forms',
+            'Continuous forms',
           ],
         };
       default:

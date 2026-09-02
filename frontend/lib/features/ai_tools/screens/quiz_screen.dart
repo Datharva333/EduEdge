@@ -53,164 +53,103 @@ class _QuizScreenState extends State<QuizScreen> {
       case '1':
         return [
           {
-            'q': 'What are the three states of matter?',
+            'q': 'What is the standard form of a quadratic equation?',
             'options': [
-              'Solid, Liquid, Gas',
-              'Hot, Cold, Warm',
-              'Hard, Soft, Medium',
-              'Heavy, Light, Medium',
+              'ax² + bx + c = 0',
+              'ax + b = 0',
+              'a/x + b = 0',
+              'ax³ + bx² + c = 0',
             ],
             'answer': 0,
           },
           {
-            'q': 'What is the process of solid converting to liquid called?',
-            'options': ['Evaporation', 'Condensation', 'Melting', 'Freezing'],
-            'answer': 2,
-          },
-          {
-            'q': 'In which state are particles most tightly packed?',
-            'options': ['Gas', 'Liquid', 'Plasma', 'Solid'],
-            'answer': 3,
-          },
-        ];
-      case '5':
-        return [
-          {
-            'q': 'What is the formula for speed?',
-            'options': [
-              'Speed = Distance x Time',
-              'Speed = Distance / Time',
-              'Speed = Time / Distance',
-              'Speed = Mass / Time',
-            ],
+            'q': 'What is the discriminant of ax² + bx + c = 0?',
+            'options': ['b² + 4ac', 'b² - 4ac', '2a + b', 'a² - bc'],
             'answer': 1,
           },
           {
-            'q': 'What is displacement?',
+            'q': 'If the discriminant is zero, the roots are:',
             'options': [
-              'Total path length',
-              'Shortest distance between start and end',
-              'Speed x Time',
-              'None of these',
-            ],
-            'answer': 1,
-          },
-          {
-            'q': 'What does the equation v = u + at represent?',
-            'options': [
-              'First equation of motion',
-              'Second equation of motion',
-              'Third equation of motion',
-              'Law of gravity',
-            ],
-            'answer': 0,
-          },
-        ];
-      case '6':
-        return [
-          {
-            'q': "Newton's First Law is also called?",
-            'options': [
-              'Law of Force',
-              'Law of Inertia',
-              'Law of Motion',
-              'Law of Action',
-            ],
-            'answer': 1,
-          },
-          {
-            'q': 'What is the formula F = ma?',
-            'options': [
-              "Newton's First Law",
-              "Newton's Second Law",
-              "Newton's Third Law",
-              'Law of Conservation',
-            ],
-            'answer': 1,
-          },
-          {
-            'q': 'What is momentum?',
-            'options': [
-              'Mass / Velocity',
-              'Mass x Acceleration',
-              'Mass x Velocity',
-              'Force x Time',
-            ],
-            'answer': 2,
-          },
-        ];
-      case '7':
-        return [
-          {
-            'q': 'When did the French Revolution begin?',
-            'options': ['1776', '1789', '1799', '1804'],
-            'answer': 1,
-          },
-          {
-            'q': 'What was stormed on July 14, 1789?',
-            'options': [
-              'The Palace of Versailles',
-              'The Bastille prison',
-              'The Louvre',
-              'Notre Dame',
-            ],
-            'answer': 1,
-          },
-          {
-            'q': 'What were the three ideals of the French Revolution?',
-            'options': [
-              'Faith, Hope, Charity',
-              'Liberty, Equality, Fraternity',
-              'Power, Glory, Honor',
-              'Land, Bread, Peace',
+              'Two distinct real roots',
+              'Two equal real roots',
+              'Always complex',
+              'Undefined',
             ],
             'answer': 1,
           },
         ];
-      case '9':
+      case '2':
         return [
           {
-            'q': 'When did India gain independence?',
+            'q': 'A solution is what type of mixture?',
             'options': [
-              'August 15, 1945',
-              'August 15, 1947',
-              'January 26, 1950',
-              'June 3, 1947',
-            ],
-            'answer': 1,
-          },
-          {
-            'q': 'What was the Dandi March about?',
-            'options': [
-              'Protesting salt tax',
-              'Demanding voting rights',
-              'Fighting for land rights',
-              'Boycotting cloth',
+              'Homogeneous',
+              'Heterogeneous only',
+              'Pure element',
+              'Pure compound',
             ],
             'answer': 0,
           },
           {
-            'q': 'When was the Indian National Congress founded?',
-            'options': ['1857', '1875', '1885', '1905'],
+            'q': 'Which can show the Tyndall effect?',
+            'options': [
+              'A true solution only',
+              'A colloid',
+              'A pure element only',
+              'A compound only',
+            ],
+            'answer': 1,
+          },
+          {
+            'q': 'Which statement about a compound is correct?',
+            'options': [
+              'Its composition can vary freely',
+              'Its elements are chemically combined in a fixed proportion',
+              'It can always be separated by filtration',
+              'It is always heterogeneous',
+            ],
+            'answer': 1,
+          },
+        ];
+      case '3':
+        return [
+          {
+            'q': 'Which tense is normally used for habits and routines?',
+            'options': [
+              'Simple present',
+              'Simple past',
+              'Past continuous',
+              'Future continuous',
+            ],
+            'answer': 0,
+          },
+          {
+            'q': 'Which sentence is in the simple past?',
+            'options': [
+              'She reads every day.',
+              'She is reading now.',
+              'She visited Delhi last year.',
+              'She will visit Delhi.',
+            ],
             'answer': 2,
+          },
+          {
+            'q': 'The simple future is commonly formed using:',
+            'options': [
+              'was + verb',
+              'will + base verb',
+              'has + verb',
+              'did + -ing',
+            ],
+            'answer': 1,
           },
         ];
       default:
         return [
           {
-            'q': 'What is the main topic of this lesson?',
-            'options': ['Science', 'History', 'English', 'Mathematics'],
-            'answer': 0,
-          },
-          {
-            'q': 'Which platform are you using to study?',
-            'options': ['EduEdge', 'Other app', 'Textbook', 'YouTube'],
-            'answer': 0,
-          },
-          {
-            'q': 'Is offline learning important for rural students?',
-            'options': ['No', 'Sometimes', 'Never', 'Yes, very important'],
-            'answer': 3,
+            'q': 'No quiz is currently available for this lesson.',
+            'options': ['Return', 'Retry', 'Refresh', 'Continue'],
+            'answer': 1,
           },
         ];
     }

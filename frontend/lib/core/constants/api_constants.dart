@@ -11,11 +11,9 @@ class ApiConstants {
   static const String register = '/api/v1/auth/register';
 
   static const String lessons = '/api/v1/lessons';
+
   static const String aiHealth = '/api/v1/ai/health';
   static const String summarize = '/api/v1/ai/summarize';
-
-  // These tools still use the legacy contract until their proper backend
-  // routes are implemented in the same way as summarize.
-  static const String quiz = '/ai/quiz';
-  static const String chat = '/ai/chat';
+  static const String quiz = '/api/v1/ai/quiz';
+  static const String chat = '/api/v1/ai/chat';
 }

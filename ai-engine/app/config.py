@@ -3,7 +3,7 @@
 Model layout on disk (all local, no network calls, no server):
 
     models/
-        llm/my-model.gguf                        -- chat model (llama.cpp GGUF)
+        llm/qQwen3.5-0.8B-Q4_K_M.gguf                        -- chat model (llama.cpp GGUF)
         embeddings/myembedding-model/             -- embedding model (sentence-transformers folder)
         cross-encoder-model/                      -- reranker model (sentence-transformers/HF folder)
 
@@ -18,7 +18,7 @@ CHROMA_PATH = "./demo-rag-chroma"
 COLLECTION_NAME = "RAG_PROJECT"
 
 # --- Local model paths ---
-CHAT_MODEL_PATH = "models/llm/qwen2.5-3b-instruct-q3_k_m.gguf"
+CHAT_MODEL_PATH = "models/llm/Qwen3.5-0.8B-Q4_K_M.gguf"
 EMBED_MODEL_PATH = "intfloat/multilingual-e5-small"
 
 CROSS_ENCODER_MODEL_PATH = (

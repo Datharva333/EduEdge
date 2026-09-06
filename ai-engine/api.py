@@ -222,7 +222,7 @@ def chat_endpoint(req: ChatRequest) -> ChatResponse:
         call_llm(
             context=context,
             prompt=req.message,
-            max_tokens=384,
+            max_tokens=1024,
         )
     ).strip()
 
@@ -277,7 +277,7 @@ def quiz_endpoint(req: QuizRequest) -> QuizResponse:
             context=context,
             prompt=f"Generate exactly {req.num_questions} quiz questions.",
             system=quiz_system_prompt,
-            max_tokens=512,
+            max_tokens=1024,
         )
     )
 
@@ -402,7 +402,7 @@ def summarize_endpoint(req: SummarizeRequest) -> SummarizeResponse:
             context=context,
             prompt=user_prompt,
             system=summarize_system_prompt,
-            max_tokens=256,
+            max_tokens=1024,
         )
     )
 

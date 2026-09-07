@@ -214,28 +214,68 @@ You are EduEdge, a concise CBSE Class 9 and 10 tutor.
 
 Answer accurately and directly.
 Use simple language suitable for a school student.
-Use no more than three short sentences unless more detail is explicitly requested.
-Do not include unnecessary explanations.
+Do not reveal internal reasoning.
+Give only the final answer.
+Keep the answer concise.
 ''',
         ),
         ChatMessage(role: 'user', content: question),
       ],
       maxTokens: 100,
-      temperature: 1.0,
-      topP: 1.0,
+      temperature: 0.3,
+      topP: 0.9,
       topK: 20,
     );
   }
 
-  static Future<String> generateComplete(String question) async {
+  static Future<String> generateComplete(
+    String question, {
+    int maxTokens = 100,
+  }) async {
     if (!_loaded) {
       await initialize();
     }
 
+    await _controller.clearContext();
+
+    final prompt =
+        '''
+<|im_start|>system
+You are EduEdge, a concise CBSE Class 9 and 10 tutor.
+Answer accurately using only the information provided by the user.
+Use simple language suitable for a school student.
+Give only the final answer.
+Do not explain your reasoning.
+Do not output thinking steps.
+<|im_end|>
+<|im_start|>user
+$question
+<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+''';
+
+    debugPrint('');
+    debugPrint('=============== GENERATION =====================');
+    debugPrint('Model: $_loadedModelPath');
+    debugPrint('Max output tokens: $maxTokens');
+
     final stopwatch = Stopwatch()..start();
     final buffer = StringBuffer();
 
-    await for (final token in generate(question)) {
+    await for (final token in _controller.generate(
+      prompt: prompt,
+      maxTokens: maxTokens,
+      temperature: 0.3,
+      topP: 0.9,
+      topK: 20,
+      minP: 0.0,
+      presencePenalty: 0.0,
+      repeatPenalty: 1.05,
+    )) {
       buffer.write(token);
     }
 
@@ -243,12 +283,7 @@ Do not include unnecessary explanations.
 
     var answer = buffer.toString().trim();
 
-    answer = answer
-        .replaceAll(
-          RegExp(r'<think>.*?</think>', dotAll: true, caseSensitive: false),
-          '',
-        )
-        .trim();
+    answer = _cleanGeneratedAnswer(answer);
 
     debugPrint('');
     debugPrint('ANSWER:');
@@ -262,7 +297,90 @@ Do not include unnecessary explanations.
     debugPrint('================================================');
     debugPrint('');
 
+    if (answer.isEmpty) {
+      throw Exception('The local AI did not produce a final answer.');
+    }
+
     return answer;
+  }
+
+  static String _cleanGeneratedAnswer(String answer) {
+    var cleaned = answer
+        .replaceAll(
+          RegExp(r'<think>.*?</think>', dotAll: true, caseSensitive: false),
+          '',
+        )
+        .replaceAll(
+          RegExp(r'<think>.*$', dotAll: true, caseSensitive: false),
+          '',
+        )
+        .trim();
+
+    cleaned = cleaned
+        .replaceAll('**', '')
+        .replaceAll(r'\neq', '≠')
+        .replaceAll(r'\pm', '±')
+        .replaceAll(r'\times', '×');
+
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\sqrt\{([^{}]+)\}'),
+      (match) => '√(${match.group(1)})',
+    );
+
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\frac\{([^{}]+)\}\{([^{}]+)\}'),
+      (match) => '(${match.group(1)})/(${match.group(2)})',
+    );
+
+    cleaned = cleaned
+        .replaceAll('^2', '²')
+        .replaceAll('^3', '³')
+        .replaceAll(r'\(', '')
+        .replaceAll(r'\)', '')
+        .replaceAll(r'\[', '')
+        .replaceAll(r'\]', '')
+        .replaceAll('\$', '')
+        .trim();
+
+    return cleaned;
+  }
+
+  static Future<String> summarizeLesson(String lessonText) async {
+    var content = lessonText.trim();
+
+    if (content.length > 1600) {
+      content = content.substring(0, 1600);
+
+      final lastSpace = content.lastIndexOf(' ');
+
+      if (lastSpace > 1200) {
+        content = content.substring(0, lastSpace);
+      }
+    }
+
+    final prompt =
+        '''
+Create a short summary of the CBSE lesson below.
+
+Rules:
+- Return exactly 4 bullet points.
+- Each bullet must be one short sentence.
+- Use only facts explicitly stated in the lesson.
+- Do not infer, invent, or add information.
+- Use simple Class 9 or 10 language.
+- Include only the most important concepts.
+- Give only the four bullet points.
+- Use plain text.
+- Do not use Markdown bold.
+- Do not use LaTeX.
+- Do not use dollar signs or backslashes.
+- Write mathematics using normal symbols such as x², ±, √ and ≠.
+
+LESSON:
+$content
+''';
+
+    return generateComplete(prompt, maxTokens: 90);
   }
 
   static Future<void> stop() async {
@@ -286,23 +404,61 @@ Do not include unnecessary explanations.
     debugPrint('Local AI model disposed.');
   }
 
-  static Future<String> summarizeLesson(String lessonText) async {
+  static Future<String> answerQuestion({
+    required String lessonText,
+    required String question,
+    String style = 'concise',
+  }) async {
+    var content = lessonText.trim();
+
+    if (content.length > 1600) {
+      content = content.substring(0, 1600);
+
+      final lastSpace = content.lastIndexOf(' ');
+      if (lastSpace > 1200) {
+        content = content.substring(0, lastSpace);
+      }
+    }
+
+    String styleInstruction;
+
+    switch (style) {
+      case 'socratic':
+        styleInstruction =
+            'Explain briefly, then end with one helpful question for the student.';
+        break;
+
+      case 'feynman':
+        styleInstruction =
+            'Explain the answer in very simple language as if teaching a beginner.';
+        break;
+
+      default:
+        styleInstruction =
+            'Give a short and direct answer in 2 to 4 sentences.';
+    }
+
     final prompt =
         '''
-Summarize the following CBSE lesson for a Class 9 or 10 student.
+Answer the student's question using the lesson below.
 
 Rules:
-- Use only the lesson content provided.
-- Keep the explanation accurate.
-- Use simple language.
-- Include only the most important concepts.
-- Write 4 to 6 short bullet points.
-- Do not add information that is not in the lesson.
+- Use only facts stated in the lesson.
+- If the lesson does not contain enough information, say: "This lesson does not contain enough information to answer that."
+- Do not invent facts.
+- Use simple Class 9 or 10 language.
+- $styleInstruction
+- Give only the final answer.
+- Do not show reasoning.
+- Do not use LaTeX.
 
 LESSON:
-$lessonText
+$content
+
+STUDENT QUESTION:
+$question
 ''';
 
-    return generateComplete(prompt);
+    return generateComplete(prompt, maxTokens: 100);
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../services/api_service.dart';
+import '../../../services/local_ai_service.dart';
 import '../../../services/mock_service.dart';
 
 class ChatMessage {
@@ -61,41 +61,79 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _send([String? preset]) async {
     final text = (preset ?? _ctrl.text).trim();
-    if (text.isEmpty || _loading) return;
+
+    if (text.isEmpty || _loading) {
+      return;
+    }
+
+    final lesson = MockService.lessons.firstWhere(
+      (lesson) => lesson['id'] == widget.lessonId,
+      orElse: () => MockService.lessons.first,
+    );
+
+    final lessonContent = lesson['content']?.toString().trim() ?? '';
 
     setState(() {
       _messages.add(
         ChatMessage(text: text, isUser: true, time: DateTime.now()),
       );
+
       _loading = true;
       _ctrl.clear();
     });
+
     _scrollToBottom();
 
-    final reply = await ApiService.chat(text, widget.lessonId);
+    try {
+      if (lessonContent.isEmpty) {
+        throw Exception('This lesson does not have local content yet.');
+      }
 
-    if (mounted) {
+      final reply = await LocalAiService.answerQuestion(
+        lessonText: lessonContent,
+        question: text,
+        style: _style,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         _messages.add(
           ChatMessage(
-            text:
-                reply ??
-                'I could not connect to the AI engine. Make sure the backend is running.',
+            text: reply,
             isUser: false,
             time: DateTime.now(),
-            suggestions: reply != null
-                ? [
-                    'Can you give a concrete example?',
-                    'What is the common misconception here?',
-                    'Turn this into a quiz question',
-                  ]
-                : [],
+            suggestions: const [
+              'Can you give a simple example?',
+              'What is the most important point?',
+              'Ask me a question about this',
+            ],
           ),
         );
+
         _loading = false;
       });
-      _scrollToBottom();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _messages.add(
+          ChatMessage(
+            text: 'Could not answer locally: $error',
+            isUser: false,
+            time: DateTime.now(),
+          ),
+        );
+
+        _loading = false;
+      });
     }
+
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/api_service.dart';
+import '../../../services/local_ai_service.dart';
 import '../../../services/mock_service.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -28,24 +28,23 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _loadQuiz() async {
     setState(() {
       _loading = true;
+      _current = 0;
+      _score = 0;
+      _selected = null;
+      _answered = false;
+      _done = false;
     });
 
-    final questions = await ApiService.getQuiz(widget.lessonId);
+    final questions = _getMockQuestions(widget.lessonId);
 
-    if (mounted) {
-      if (questions != null && questions.isNotEmpty) {
-        setState(() {
-          _questions = questions;
-          _loading = false;
-        });
-      } else {
-        // fallback to mock questions
-        setState(() {
-          _questions = _getMockQuestions(widget.lessonId);
-          _loading = false;
-        });
-      }
+    if (!mounted) {
+      return;
     }
+
+    setState(() {
+      _questions = questions;
+      _loading = false;
+    });
   }
 
   List<Map<String, dynamic>> _getMockQuestions(String lessonId) {

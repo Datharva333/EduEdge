@@ -14,7 +14,7 @@ import '../../features/ai_tools/screens/chat_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/home',
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),

@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/network/api_exception.dart';
-import '../../../services/api_service.dart';
+import '../../../services/local_ai_service.dart';
 import '../../lesson/models/lesson.dart';
 import '../../lesson/providers/lesson_provider.dart';
 
@@ -23,12 +22,11 @@ class _AiHubScreenState extends State<AiHubScreen> {
   String? _selectedLessonId;
   String? _summary;
   String? _summaryError;
+
   bool _loadingSummary = false;
-  bool _checkingStatus = true;
-  bool _backendOnline = false;
-  bool _aiOnline = false;
-  double? _responseTime;
   bool _initialized = false;
+
+  double? _responseTime;
 
   @override
   void initState() {
@@ -39,7 +37,11 @@ class _AiHubScreenState extends State<AiHubScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_initialized) return;
+
+    if (_initialized) {
+      return;
+    }
+
     _initialized = true;
     _initialize();
   }
@@ -51,38 +53,23 @@ class _AiHubScreenState extends State<AiHubScreen> {
   }
 
   Future<void> _initialize() async {
-    await Future.wait([
-      _checkServices(),
-      context.read<LessonProvider>().loadLessons(),
-    ]);
+    await context.read<LessonProvider>().loadLessons();
 
-    if (!mounted) return;
-    _ensureSelectedLesson(context.read<LessonProvider>().lessons);
-  }
-
-  Future<void> _checkServices() async {
-    if (mounted) {
-      setState(() => _checkingStatus = true);
+    if (!mounted) {
+      return;
     }
 
-    final results = await Future.wait([
-      ApiService.isBackendUp(),
-      ApiService.isAiEngineUp(),
-    ]);
-
-    if (!mounted) return;
-    setState(() {
-      _backendOnline = results[0];
-      _aiOnline = results[1];
-      _checkingStatus = false;
-    });
+    _ensureSelectedLesson(context.read<LessonProvider>().lessons);
   }
 
   void _ensureSelectedLesson(List<Lesson> lessons) {
     if (lessons.isEmpty) {
       if (_selectedLessonId != null) {
-        setState(() => _selectedLessonId = null);
+        setState(() {
+          _selectedLessonId = null;
+        });
       }
+
       return;
     }
 
@@ -91,24 +78,48 @@ class _AiHubScreenState extends State<AiHubScreen> {
     );
 
     if (!requestedExists) {
-      setState(() => _selectedLessonId = lessons.first.id);
+      setState(() {
+        _selectedLessonId = lessons.first.id;
+      });
     }
   }
 
   Future<void> _refresh() async {
-    await Future.wait([
-      _checkServices(),
-      context.read<LessonProvider>().loadLessons(force: true),
-    ]);
+    await context.read<LessonProvider>().loadLessons(force: true);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
+
     _ensureSelectedLesson(context.read<LessonProvider>().lessons);
   }
 
   Future<void> _summarize() async {
     final lessonId = _selectedLessonId;
+
     if (lessonId == null) {
-      setState(() => _summaryError = 'Select a lesson before summarizing.');
+      setState(() {
+        _summaryError = 'Select a lesson before summarizing.';
+      });
+
+      return;
+    }
+
+    final lesson = context.read<LessonProvider>().findById(lessonId);
+
+    if (lesson == null) {
+      setState(() {
+        _summaryError = 'Lesson could not be found locally.';
+      });
+
+      return;
+    }
+
+    if (lesson.content.trim().isEmpty) {
+      setState(() {
+        _summaryError = 'This lesson does not have local content yet.';
+      });
+
       return;
     }
 
@@ -124,31 +135,50 @@ class _AiHubScreenState extends State<AiHubScreen> {
     final stopwatch = Stopwatch()..start();
 
     try {
-      final result = await ApiService.summarize(
-        lessonId,
-        topic: _topicController.text,
-      );
+      var lessonText = lesson.content.trim();
+
+      final topic = _topicController.text.trim();
+
+      if (topic.isNotEmpty) {
+        lessonText =
+            '''
+Lesson: ${lesson.title}
+
+Focus topic: $topic
+
+Lesson content:
+$lessonText
+''';
+      }
+
+      final result = await LocalAiService.summarizeLesson(lessonText);
+
       stopwatch.stop();
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         _summary = result;
         _responseTime = stopwatch.elapsedMilliseconds / 1000;
-        _aiOnline = true;
       });
-    } on ApiException catch (error) {
+    } catch (error) {
       stopwatch.stop();
-      if (!mounted) return;
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
-        _summaryError = error.message;
+        _summaryError = error.toString();
         _responseTime = stopwatch.elapsedMilliseconds / 1000;
-        if (error.statusCode == 503) {
-          _aiOnline = false;
-        }
       });
     } finally {
       if (mounted) {
-        setState(() => _loadingSummary = false);
+        setState(() {
+          _loadingSummary = false;
+        });
       }
     }
   }
@@ -156,7 +186,9 @@ class _AiHubScreenState extends State<AiHubScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     final lessonProvider = context.watch<LessonProvider>();
+
     final selectedLesson = _selectedLesson(lessonProvider.lessons);
 
     return Scaffold(
@@ -166,7 +198,7 @@ class _AiHubScreenState extends State<AiHubScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadingSummary ? null : _refresh,
-            tooltip: 'Refresh services and lessons',
+            tooltip: 'Refresh lessons',
           ),
         ],
       ),
@@ -176,12 +208,6 @@ class _AiHubScreenState extends State<AiHubScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
-            _ServiceStatusCard(
-              checking: _checkingStatus,
-              backendOnline: _backendOnline,
-              aiOnline: _aiOnline,
-            ),
-            const SizedBox(height: 24),
             Text(
               'Select Lesson',
               style: Theme.of(
@@ -189,8 +215,11 @@ class _AiHubScreenState extends State<AiHubScreen> {
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
+
             _buildLessonSelector(lessonProvider),
+
             const SizedBox(height: 16),
+
             TextField(
               controller: _topicController,
               enabled: !_loadingSummary && selectedLesson != null,
@@ -207,14 +236,18 @@ class _AiHubScreenState extends State<AiHubScreen> {
                 prefixIcon: Icon(Icons.filter_alt_outlined),
               ),
             ),
+
             const SizedBox(height: 24),
+
             Text(
               'AI Tools',
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 12),
+
             GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
@@ -264,14 +297,18 @@ class _AiHubScreenState extends State<AiHubScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 24),
+
             if (_loadingSummary) _GeneratingSummary(lesson: selectedLesson),
+
             if (_summaryError != null && !_loadingSummary)
               _SummaryError(
                 message: _summaryError!,
                 responseTime: _responseTime,
                 onRetry: selectedLesson == null ? null : _summarize,
               ),
+
             if (_summary != null && !_loadingSummary)
               _SummaryCard(
                 lesson: selectedLesson,
@@ -352,6 +389,7 @@ class _AiHubScreenState extends State<AiHubScreen> {
                 _summary = null;
                 _summaryError = null;
                 _responseTime = null;
+
                 _topicController.clear();
               });
             },
@@ -360,101 +398,18 @@ class _AiHubScreenState extends State<AiHubScreen> {
 
   Lesson? _selectedLesson(List<Lesson> lessons) {
     final id = _selectedLessonId;
-    if (id == null) return null;
-    for (final lesson in lessons) {
-      if (lesson.id == id) return lesson;
+
+    if (id == null) {
+      return null;
     }
+
+    for (final lesson in lessons) {
+      if (lesson.id == id) {
+        return lesson;
+      }
+    }
+
     return null;
-  }
-}
-
-class _ServiceStatusCard extends StatelessWidget {
-  final bool checking;
-  final bool backendOnline;
-  final bool aiOnline;
-
-  const _ServiceStatusCard({
-    required this.checking,
-    required this.backendOnline,
-    required this.aiOnline,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Service status',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          _StatusRow(
-            label: 'Backend',
-            online: backendOnline,
-            checking: checking,
-          ),
-          const SizedBox(height: 8),
-          _StatusRow(label: 'AI engine', online: aiOnline, checking: checking),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusRow extends StatelessWidget {
-  final String label;
-  final bool online;
-  final bool checking;
-
-  const _StatusRow({
-    required this.label,
-    required this.online,
-    required this.checking,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = checking
-        ? Colors.grey
-        : online
-        ? Colors.green
-        : Colors.red;
-
-    return Row(
-      children: [
-        if (checking)
-          const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        else
-          Icon(
-            online ? Icons.check_circle : Icons.error_outline,
-            size: 18,
-            color: color,
-          ),
-        const SizedBox(width: 10),
-        Expanded(child: Text(label)),
-        Text(
-          checking
-              ? 'Checking'
-              : online
-              ? 'Online'
-              : 'Offline',
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
   }
 }
 
@@ -522,13 +477,16 @@ class _SummaryError extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(message),
+
           if (responseTime != null) ...[
             const SizedBox(height: 6),
             Text(
-              'Failed after ${responseTime!.toStringAsFixed(1)}s',
+              'Failed after '
+              '${responseTime!.toStringAsFixed(1)}s',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ],
+
           if (onRetry != null) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -564,7 +522,9 @@ class _SummaryCard extends StatelessWidget {
         Row(
           children: [
             const Icon(Icons.auto_awesome, size: 16),
+
             const SizedBox(width: 6),
+
             Expanded(
               child: Text(
                 lesson == null ? 'AI Summary' : '${lesson!.title} Summary',
@@ -573,16 +533,20 @@ class _SummaryCard extends StatelessWidget {
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
+
             if (responseTime != null)
               Text(
                 '${responseTime!.toStringAsFixed(1)}s',
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
+
             const SizedBox(width: 8),
+
             IconButton(
               tooltip: 'Copy summary',
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: summary));
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -596,7 +560,9 @@ class _SummaryCard extends StatelessWidget {
             ),
           ],
         ),
+
         const SizedBox(height: 8),
+
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -657,7 +623,9 @@ class _HubButton extends StatelessWidget {
                 )
               else
                 Icon(icon, color: enabled ? color : Colors.grey, size: 18),
+
               const SizedBox(width: 6),
+
               Flexible(
                 child: Text(
                   label,

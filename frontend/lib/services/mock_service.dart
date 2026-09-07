@@ -2,7 +2,8 @@ class MockService {
   static final List<Map<String, dynamic>> subjects = [
     {'id': 'maths', 'name': 'Mathematics', 'icon': '📐', 'color': '0xFF5C6BC0'},
     {'id': 'science', 'name': 'Science', 'icon': '⚗️', 'color': '0xFF26A69A'},
-    {'id': 'english', 'name': 'English', 'icon': '✏️', 'color': '0xFF8D6E63'},
+    {'id': 'history', 'name': 'History', 'icon': '📖', 'color': '0xFF8D6E63'},
+    {'id': 'english', 'name': 'English', 'icon': '✏️', 'color': '0xFF78909C'},
   ];
 
   static final List<Map<String, dynamic>> lessons = [
@@ -13,9 +14,20 @@ class MockService {
       'class': '10',
       'icon': '📐',
       'content':
-          'A quadratic equation has degree two and can be written as ax² + bx + c = 0, where a is not zero. '
-          'Its roots can be found using factorisation, completing the square, or the quadratic formula. '
-          'The discriminant b² - 4ac determines whether the roots are distinct real roots, equal real roots, or complex roots.',
+          'A quadratic equation is a polynomial equation of degree 2, which means the highest power of the variable is 2. '
+          'The standard form of a quadratic equation is ax² + bx + c = 0, where a, b, and c are real numbers and a is not equal to 0. '
+          'If a were equal to 0, the equation would become a linear equation instead of a quadratic equation. '
+          'In the standard form, a is called the leading coefficient, b is the linear coefficient, and c is the constant term. '
+          'Quadratic equations can be solved using factorisation, completing the square, or the quadratic formula. '
+          'The quadratic formula is x = (-b ± √(b² - 4ac)) / (2a). '
+          'The expression b² - 4ac is called the discriminant. '
+          'The discriminant tells us the nature of the roots of the quadratic equation. '
+          'If the discriminant is greater than 0, the equation has two distinct real roots. '
+          'If the discriminant is equal to 0, the equation has one repeated real root. '
+          'If the discriminant is less than 0, the equation has two complex roots. '
+          'The graph associated with a quadratic equation is a parabola. '
+          'If the leading coefficient a is positive, the parabola opens upward, while if a is negative, the parabola opens downward. '
+          'Quadratic equations are used in mathematics, geometry, physics, and many real-world problems involving areas, trajectories, and optimisation.',
     },
     {
       'id': '2',
@@ -24,9 +36,19 @@ class MockService {
       'class': '9',
       'icon': '⚗️',
       'content':
-          'Matter may be a pure substance or a mixture. Mixtures may be homogeneous or heterogeneous. '
-          'Solutions, suspensions and colloids differ in particle size, stability, filtration behaviour and the Tyndall effect. '
-          'Elements and compounds are pure substances, while mixtures contain substances physically combined.',
+          'Matter may be classified as a pure substance or a mixture. '
+          'A mixture contains two or more substances physically combined in any proportion, and its components retain their individual properties. '
+          'Mixtures may be homogeneous or heterogeneous. '
+          'A homogeneous mixture has a uniform composition throughout, while a heterogeneous mixture has a non-uniform composition. '
+          'A solution is a homogeneous mixture containing a solute and a solvent. '
+          'The solute is the substance that dissolves, while the solvent is the substance that dissolves the solute. '
+          'Solutions, suspensions, and colloids differ in particle size, stability, filtration behaviour, and their interaction with light. '
+          'A true solution does not show the Tyndall effect because its particles are too small to scatter light. '
+          'Suspensions contain large particles that may settle down when left undisturbed and can usually be separated by filtration. '
+          'Colloids have particles that are smaller than suspension particles but large enough to scatter light. '
+          'The scattering of light by colloidal or suspension particles is called the Tyndall effect. '
+          'Pure substances are classified as elements or compounds. '
+          'An element contains only one type of atom, while a compound contains two or more elements chemically combined in a fixed proportion.',
     },
     {
       'id': '3',
@@ -35,8 +57,22 @@ class MockService {
       'class': '9',
       'icon': '✏️',
       'content':
-          'Tenses show the time of an action or state. English tenses are mainly organised around present, past and future time. '
-          'Different forms are used for habits, completed actions and actions that are continuing.',
+          'Tenses are forms of verbs that show the time of an action or state. '
+          'There are three main tenses: Present, Past, and Future. '
+          'Each main tense can appear in different forms such as Simple, Continuous, Perfect, and Perfect Continuous. '
+          'Simple Present is used for habits, routines, and general truths. '
+          'For example, "The sun rises in the east." '
+          'Present Continuous is used for actions happening at the present moment. '
+          'For example, "She is reading a book." '
+          'Present Perfect is used for actions completed in the recent past that still have importance in the present. '
+          'For example, "I have finished my homework." '
+          'Simple Past is used for completed actions that happened in the past. '
+          'For example, "He went to school yesterday." '
+          'Past Continuous describes an action that was continuing at a particular time in the past. '
+          'For example, "They were playing cricket when it rained." '
+          'Simple Future is used for actions that will happen in the future. '
+          'For example, "I will visit Delhi next week." '
+          'Using the correct tense helps clearly communicate when an action takes place.',
     },
     {
       'id': '4',
@@ -47,13 +83,14 @@ class MockService {
       'content':
           'The cell is the basic structural and functional unit of life. '
           'Robert Hooke discovered cells in 1665 when he observed cork under a microscope. '
-          'All living organisms are made up of cells. Unicellular organisms have only one cell, like amoeba and bacteria. '
-          'Multicellular organisms have many cells, like humans and plants. '
+          'All living organisms are made up of cells. '
+          'Unicellular organisms have only one cell, such as amoeba and bacteria. '
+          'Multicellular organisms have many cells, such as humans and plants. '
           'A cell has three main parts: the cell membrane, the cytoplasm, and the nucleus. '
           'The cell membrane controls what enters and leaves the cell. '
-          'The nucleus contains DNA and controls all cell activities. '
+          'The nucleus contains DNA and controls cell activities. '
           'Plant cells have a cell wall, chloroplasts, and a large vacuole, which animal cells do not have. '
-          'The mitochondria is the powerhouse of the cell, producing energy through respiration.',
+          'Mitochondria release energy through respiration and are often called the powerhouse of the cell.',
     },
     {
       'id': '5',
@@ -66,10 +103,11 @@ class MockService {
           'Distance is the total path length covered by an object. '
           'Displacement is the shortest distance between the initial and final positions of an object. '
           'Speed is the distance covered per unit time. Speed = Distance / Time. '
-          'Velocity is the displacement per unit time and has both magnitude and direction. '
-          'Acceleration is the rate of change of velocity. Acceleration = (Final velocity - Initial velocity) / Time. '
-          'The three equations of motion are: v = u + at, s = ut + ½at², v² = u² + 2as, '
-          'where u is initial velocity, v is final velocity, a is acceleration, s is displacement, and t is time.',
+          'Velocity is displacement per unit time and has both magnitude and direction. '
+          'Acceleration is the rate of change of velocity. '
+          'Acceleration = (Final velocity - Initial velocity) / Time. '
+          'The three equations of motion are v = u + at, s = ut + ½at², and v² = u² + 2as. '
+          'Here u is initial velocity, v is final velocity, a is acceleration, s is displacement, and t is time.',
     },
     {
       'id': '6',
@@ -79,13 +117,13 @@ class MockService {
       'icon': '⚡',
       'content':
           'Force is a push or pull that changes or tends to change the state of rest or motion of an object. '
-          'Newton\'s First Law: An object remains at rest or in uniform motion unless acted upon by an external force. This is also called the Law of Inertia. '
-          'Newton\'s Second Law: The force acting on an object is equal to the product of its mass and acceleration. F = ma. '
-          'Newton\'s Third Law: For every action, there is an equal and opposite reaction. '
+          'Newton\'s First Law states that an object remains at rest or in uniform motion unless acted upon by an external force. '
+          'This is also called the Law of Inertia. '
+          'Newton\'s Second Law states that the force acting on an object is equal to the product of its mass and acceleration. F = ma. '
+          'Newton\'s Third Law states that for every action, there is an equal and opposite reaction. '
           'Momentum is the product of mass and velocity. p = mv. '
-          'The Law of Conservation of Momentum states that the total momentum of a system remains constant if no external force acts on it.',
+          'The Law of Conservation of Momentum states that the total momentum of a system remains constant when no external force acts on it.',
     },
-    // HISTORY — Class 9-10
     {
       'id': '7',
       'title': 'The French Revolution',
@@ -93,15 +131,15 @@ class MockService {
       'class': '9',
       'icon': '🏰',
       'content':
-          'The French Revolution began in 1789 and fundamentally transformed France and influenced the world. '
-          'France in the 18th century was divided into three estates. The First Estate was the clergy, '
-          'the Second Estate was the nobility, and the Third Estate included everyone else — peasants, merchants, and workers. '
-          'The Third Estate paid heavy taxes while the privileged estates paid none. '
+          'The French Revolution began in 1789 and transformed France while influencing political movements across the world. '
+          'France in the 18th century was divided into three estates. '
+          'The First Estate consisted of the clergy, the Second Estate consisted of the nobility, and the Third Estate included peasants, merchants, workers, and other ordinary citizens. '
+          'The Third Estate paid heavy taxes while the privileged estates enjoyed many exemptions. '
           'The ideas of liberty, equality, and fraternity inspired the revolutionaries. '
-          'On July 14, 1789, the Bastille prison was stormed, marking the symbolic start of the Revolution. '
-          'The monarchy was abolished and King Louis XVI was executed in 1793. '
-          'The Revolution led to the Declaration of the Rights of Man, establishing principles of freedom and equality. '
-          'Napoleon Bonaparte rose to power after the Revolution, spreading revolutionary ideas across Europe.',
+          'On July 14, 1789, the Bastille prison was stormed and became a symbol of the beginning of the Revolution. '
+          'The monarchy was later abolished and King Louis XVI was executed in 1793. '
+          'The Revolution led to the Declaration of the Rights of Man and Citizen, which promoted freedom and equality. '
+          'Napoleon Bonaparte later rose to power and spread several revolutionary ideas across Europe.',
     },
     {
       'id': '8',
@@ -111,13 +149,13 @@ class MockService {
       'icon': '📜',
       'content':
           'Adolf Hitler and the Nazi Party came to power in Germany in 1933. '
-          'Germany was humiliated after World War I by the Treaty of Versailles, which imposed heavy reparations and territorial losses. '
-          'The Great Depression of 1929 caused massive unemployment and economic hardship in Germany. '
-          'Hitler exploited this crisis, promising to restore Germany\'s glory and blaming Jews and other minorities for Germany\'s problems. '
-          'The Nazi ideology was based on extreme nationalism, racism, and anti-Semitism. '
-          'Hitler became Chancellor in 1933 and quickly established a totalitarian dictatorship. '
-          'The Holocaust was the systematic genocide of six million Jews and millions of others by the Nazi regime. '
-          'World War II began when Germany invaded Poland in 1939. Germany was defeated in 1945.',
+          'Germany faced humiliation and economic difficulties after World War I and the Treaty of Versailles. '
+          'The Great Depression of 1929 caused widespread unemployment and economic hardship. '
+          'Hitler exploited the crisis by promising to restore Germany\'s power and by blaming Jews and other minorities for Germany\'s problems. '
+          'Nazi ideology was based on extreme nationalism, racism, anti-Semitism, and dictatorship. '
+          'Hitler became Chancellor in 1933 and quickly created a totalitarian state. '
+          'The Holocaust was the systematic genocide of six million Jews and millions of other victims by the Nazi regime. '
+          'World War II began when Germany invaded Poland in 1939, and Germany was defeated in 1945.',
     },
     {
       'id': '9',
@@ -126,14 +164,14 @@ class MockService {
       'class': '10',
       'icon': '🇮🇳',
       'content':
-          'Indian nationalism emerged as a response to British colonial rule. '
-          'The Indian National Congress was founded in 1885 and became the leading organization for independence. '
-          'Mahatma Gandhi returned to India in 1915 and transformed the independence movement into a mass movement. '
-          'The Non-Cooperation Movement (1920-22) called on Indians to boycott British goods, schools, and courts. '
-          'The Civil Disobedience Movement began in 1930 with Gandhi\'s famous Dandi March, where he walked 240 miles to make salt from seawater to protest the salt tax. '
-          'The Quit India Movement of 1942 demanded immediate independence from British rule. '
-          'India finally gained independence on August 15, 1947. '
-          'The partition of India and Pakistan accompanied independence, causing massive displacement and communal violence.',
+          'Indian nationalism developed as a response to British colonial rule. '
+          'The Indian National Congress was founded in 1885 and became an important organisation in the struggle for independence. '
+          'Mahatma Gandhi returned to India in 1915 and helped transform the independence struggle into a mass movement. '
+          'The Non-Cooperation Movement of 1920-22 encouraged Indians to boycott British goods, schools, and courts. '
+          'The Civil Disobedience Movement began in 1930 and included Gandhi\'s Dandi March against the British salt tax. '
+          'The Quit India Movement of 1942 demanded an end to British rule. '
+          'India gained independence on August 15, 1947. '
+          'Independence was accompanied by the partition of India and Pakistan, which caused large-scale displacement and communal violence.',
     },
     {
       'id': '10',
@@ -142,16 +180,15 @@ class MockService {
       'class': '10',
       'icon': '🏭',
       'content':
-          'The Industrial Revolution began in Britain in the 18th century and transformed the world. '
-          'Before industrialisation, most goods were made by hand in homes or small workshops. '
-          'The invention of the steam engine by James Watt in 1769 was a turning point, powering factories, ships, and railways. '
-          'Cotton textile industries were among the first to industrialise, using machines like the spinning jenny and power loom. '
-          'Industrialisation created new social classes — the industrial middle class (factory owners) and the industrial working class. '
-          'Workers, including women and children, worked long hours in dangerous conditions for low wages. '
-          'In India, industrialisation under British rule meant Indian textile industries were destroyed as cheap British machine-made goods flooded the market. '
-          'Indian industries like Tata Steel began emerging in the late 19th century despite British policies.',
+          'The Industrial Revolution began in Britain during the 18th century and transformed manufacturing and society. '
+          'Before industrialisation, many goods were produced by hand in homes or small workshops. '
+          'The development of steam power helped factories, ships, and railways expand rapidly. '
+          'Cotton textile industries were among the first industries to use large-scale machinery such as the spinning jenny and power loom. '
+          'Industrialisation created new social groups including factory owners and industrial workers. '
+          'Workers, including women and children, often worked long hours in unsafe conditions for low wages. '
+          'In colonial India, British machine-made textiles created major difficulties for traditional Indian textile producers. '
+          'Indian industries such as Tata Steel later developed despite colonial economic policies.',
     },
-    // ENGLISH — Class 9-10
     {
       'id': '11',
       'title': 'The Fun They Had — Story Analysis',
@@ -159,14 +196,14 @@ class MockService {
       'class': '9',
       'icon': '📚',
       'content':
-          'The Fun They Had is a science fiction story by Isaac Asimov, set in the year 2157. '
-          'The story is about two children, Margie and Tommy, who live in a future where children are taught by mechanical teachers at home. '
-          'Tommy finds a real printed book — something extraordinary in their time — and they read about the old kind of school. '
-          'In the old schools, children sat together in a building, had a human teacher, and learned the same things. '
-          'Margie had been struggling with geography and her mechanical teacher had been adjusted many times. '
-          'The story contrasts the cold, isolated learning of the future with the warm, social learning of the past. '
-          'Margie thinks about the fun the children of the past must have had — going to school together, helping each other, laughing together. '
-          'The story raises questions about technology in education and the value of human connection in learning.',
+          'The Fun They Had is a science fiction story by Isaac Asimov set in the year 2157. '
+          'The story follows two children, Margie and Tommy, who are taught at home by mechanical teachers. '
+          'Tommy discovers an old printed book describing schools from the past. '
+          'In those schools, children studied together in a school building and were taught by human teachers. '
+          'Margie has difficulty with geography and her mechanical teacher has to be adjusted. '
+          'The story contrasts isolated technology-based education with the social experience of traditional schools. '
+          'Margie begins imagining how much fun children in the past may have had learning together, helping one another, and sharing experiences. '
+          'The story explores technology in education and the importance of human interaction in learning.',
     },
     {
       'id': '12',
@@ -176,14 +213,15 @@ class MockService {
       'icon': '✏️',
       'content':
           'Tenses are forms of verbs that show the time of an action or state. '
-          'There are three main tenses: Present, Past, and Future. Each has four aspects: Simple, Continuous, Perfect, and Perfect Continuous. '
-          'Simple Present: Used for habitual actions and general truths. Example: The sun rises in the east. '
-          'Present Continuous: Used for actions happening right now. Example: She is reading a book. '
-          'Present Perfect: Used for actions completed in the recent past with present relevance. Example: I have finished my homework. '
-          'Simple Past: Used for completed actions in the past. Example: He went to school yesterday. '
-          'Past Continuous: Used for actions that were ongoing in the past. Example: They were playing cricket when it rained. '
-          'Simple Future: Used for actions that will happen in the future. Example: I will visit Delhi next week. '
-          'The key is to use the correct tense to clearly communicate when an action takes place.',
+          'There are three main tenses: Present, Past, and Future. '
+          'Each tense can have Simple, Continuous, Perfect, and Perfect Continuous forms. '
+          'Simple Present is used for habitual actions and general truths. Example: The sun rises in the east. '
+          'Present Continuous is used for actions happening right now. Example: She is reading a book. '
+          'Present Perfect is used for actions completed in the recent past that remain relevant to the present. Example: I have finished my homework. '
+          'Simple Past is used for completed actions in the past. Example: He went to school yesterday. '
+          'Past Continuous is used for actions that were ongoing in the past. Example: They were playing cricket when it rained. '
+          'Simple Future is used for actions that will happen in the future. Example: I will visit Delhi next week. '
+          'Correct use of tense helps clearly communicate when an action takes place.',
     },
     {
       'id': '13',
@@ -192,22 +230,22 @@ class MockService {
       'class': '10',
       'icon': '✉️',
       'content':
-          'A Letter to God is a short story by G.L. Fuentes, translated from Spanish. '
+          'A Letter to God is a short story by G.L. Fuentes. '
           'The story is about Lencho, a poor farmer who lives with his family in a small house on a hill. '
-          'Lencho was expecting a good harvest but a hailstorm destroyed all his crops, leaving his family with nothing to eat. '
-          'Lencho had firm faith in God and believed God would help him. He wrote a letter to God asking for 100 pesos. '
-          'The postmaster found the letter amusing but was also moved by Lencho\'s faith. '
-          'He collected money from his employees and sent 70 pesos to Lencho in God\'s name. '
-          'When Lencho received the money, he was not satisfied — he wrote another letter to God saying the post office employees had stolen 30 pesos. '
-          'The story is ironic and explores themes of faith, innocence, and the contrast between Lencho\'s deep faith and his suspicion of honest people.',
+          'Lencho expects a good harvest, but a hailstorm destroys his crops and leaves his family without food. '
+          'Because of his strong faith in God, Lencho writes a letter asking God for 100 pesos. '
+          'The postmaster is moved by Lencho\'s faith and collects money from employees to help him. '
+          'Lencho receives 70 pesos but believes the remaining money was stolen by postal employees. '
+          'He writes another letter to God asking for the remaining money and warning God not to send it through the post office. '
+          'The story uses irony and explores themes of faith, innocence, trust, and human kindness.',
     },
   ];
 
   static List<Map<String, dynamic>> getLessonsBySubject(String subject) {
-    return lessons.where((l) => l['subject'] == subject).toList();
+    return lessons.where((lesson) => lesson['subject'] == subject).toList();
   }
 
   static List<Map<String, dynamic>> getLessonsByClass(String classNum) {
-    return lessons.where((l) => l['class'] == classNum).toList();
+    return lessons.where((lesson) => lesson['class'] == classNum).toList();
   }
 }

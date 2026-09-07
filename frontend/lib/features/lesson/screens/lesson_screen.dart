@@ -72,24 +72,20 @@ class _LessonScreenState extends State<LessonScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? _LessonError(message: _errorMessage!, onRetry: _loadLesson)
-              : _buildLesson(context, scheme, _lesson!),
+          ? _LessonError(message: _errorMessage!, onRetry: _loadLesson)
+          : _buildLesson(context, scheme, _lesson!),
     );
   }
 
-  Widget _buildLesson(
-    BuildContext context,
-    ColorScheme scheme,
-    Lesson lesson,
-  ) {
+  Widget _buildLesson(BuildContext context, ColorScheme scheme, Lesson lesson) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Text(
           lesson.title,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Align(
@@ -118,9 +114,9 @@ class _LessonScreenState extends State<LessonScreen> {
         const SizedBox(height: 32),
         Text(
           'AI Tools',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         GridView.count(

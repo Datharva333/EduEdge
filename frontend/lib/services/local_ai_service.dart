@@ -411,11 +411,12 @@ $content
   }) async {
     var content = lessonText.trim();
 
-    if (content.length > 1600) {
-      content = content.substring(0, 1600);
+    if (content.length > 1500) {
+      content = content.substring(0, 1500);
 
       final lastSpace = content.lastIndexOf(' ');
-      if (lastSpace > 1200) {
+
+      if (lastSpace > 1100) {
         content = content.substring(0, lastSpace);
       }
     }
@@ -425,17 +426,16 @@ $content
     switch (style) {
       case 'socratic':
         styleInstruction =
-            'Explain briefly, then end with one helpful question for the student.';
+            'Explain briefly. If the student asks for a specific number of points, give exactly that many numbered points and do not add a follow-up question.';
         break;
 
       case 'feynman':
         styleInstruction =
-            'Explain the answer in very simple language as if teaching a beginner.';
+            'Explain in very simple language as if teaching a beginner.';
         break;
 
       default:
-        styleInstruction =
-            'Give a short and direct answer in 2 to 4 sentences.';
+        styleInstruction = 'Give a short and direct answer.';
     }
 
     final prompt =
@@ -444,10 +444,13 @@ Answer the student's question using the lesson below.
 
 Rules:
 - Use only facts stated in the lesson.
-- If the lesson does not contain enough information, say: "This lesson does not contain enough information to answer that."
-- Do not invent facts.
+- Do not invent information.
 - Use simple Class 9 or 10 language.
 - $styleInstruction
+- If the student asks for N points, give exactly N points.
+- Each point must be one short sentence.
+- Never use sub-points or sub-bullets.
+- Keep the complete answer under 70 words.
 - Give only the final answer.
 - Do not show reasoning.
 - Do not use LaTeX.
@@ -459,6 +462,174 @@ STUDENT QUESTION:
 $question
 ''';
 
-    return generateComplete(prompt, maxTokens: 100);
+    return generateComplete(prompt, maxTokens: 120);
+  }
+
+  static Future<List<Map<String, dynamic>>> generateQuiz(
+    String lessonText,
+  ) async {
+    var content = lessonText.trim();
+
+    if (content.length > 1200) {
+      content = content.substring(0, 1200);
+
+      final lastSpace = content.lastIndexOf(' ');
+
+      if (lastSpace > 900) {
+        content = content.substring(0, lastSpace);
+      }
+    }
+
+    final prompt =
+        '''
+Create exactly 3 multiple-choice questions from this CBSE lesson.
+
+Requirements:
+- Every question must be a real question about the lesson.
+- Use only facts stated in the lesson.
+- Each question must have exactly 4 options.
+- Exactly one option must be correct.
+- Keep questions and options short.
+- Do not explain answers.
+- Do not use Markdown.
+- Never write "Question text".
+- Never write "First option", "Second option", "Third option", or "Fourth option".
+- Replace every field with actual lesson content.
+
+Output each question exactly like this structure:
+
+Q|actual question?
+A|actual answer choice
+B|actual answer choice
+C|actual answer choice
+D|actual answer choice
+ANSWER|A
+
+Repeat that structure until exactly 3 real questions have been written.
+
+LESSON:
+$content
+''';
+
+    final result = await generateComplete(prompt, maxTokens: 180);
+
+    debugPrint('');
+    debugPrint('=============== QUIZ RAW OUTPUT ================');
+    debugPrint(result);
+    debugPrint('================================================');
+
+    final questions = _parseQuiz(result);
+
+    debugPrint('PARSED QUIZ QUESTIONS: ${questions.length}');
+
+    if (questions.length < 3) {
+      throw Exception('The local AI did not generate 3 valid quiz questions.');
+    }
+
+    return questions.take(3).toList();
+  }
+
+  static List<Map<String, dynamic>> _parseQuiz(String text) {
+    final questions = <Map<String, dynamic>>[];
+
+    String? currentQuestion;
+    final options = <String>[];
+    int? currentAnswer;
+
+    void saveQuestion() {
+      final question = currentQuestion?.trim() ?? '';
+
+      final lowerQuestion = question.toLowerCase();
+
+      final invalidQuestion =
+          question.isEmpty ||
+          lowerQuestion == 'question text' ||
+          lowerQuestion == 'actual question?' ||
+          lowerQuestion.contains('question text');
+
+      final invalidOptions = options.any((option) {
+        final value = option.toLowerCase();
+
+        return value.contains('first option') ||
+            value.contains('second option') ||
+            value.contains('third option') ||
+            value.contains('fourth option') ||
+            value.contains('actual answer choice');
+      });
+
+      if (!invalidQuestion &&
+          !invalidOptions &&
+          options.length == 4 &&
+          currentAnswer != null &&
+          currentAnswer! >= 0 &&
+          currentAnswer! <= 3) {
+        questions.add({
+          'q': question,
+          'options': List<String>.from(options),
+          'answer': currentAnswer,
+        });
+      }
+
+      currentQuestion = null;
+      options.clear();
+      currentAnswer = null;
+    }
+
+    final lines = text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty);
+
+    for (final originalLine in lines) {
+      var line = originalLine
+          .replaceAll('```text', '')
+          .replaceAll('```', '')
+          .trim();
+
+      line = line.replaceFirst(RegExp(r'^(?:[-*]\s*)?(?:\d+[.)]\s*)?'), '');
+
+      final questionMatch = RegExp(
+        r'^(?:Q|QUESTION)(?:\d+)?\s*(?:\||:)\s*(.+)$',
+        caseSensitive: false,
+      ).firstMatch(line);
+
+      if (questionMatch != null) {
+        saveQuestion();
+
+        currentQuestion = questionMatch.group(1)?.trim();
+
+        continue;
+      }
+
+      final optionMatch = RegExp(
+        r'^([ABCD])\s*(?:\||:)\s*(.+)$',
+        caseSensitive: false,
+      ).firstMatch(line);
+
+      if (optionMatch != null && currentQuestion != null) {
+        final option = optionMatch.group(2)?.trim() ?? '';
+
+        if (option.isNotEmpty && options.length < 4) {
+          options.add(option);
+        }
+
+        continue;
+      }
+
+      final answerMatch = RegExp(
+        r'^(?:ANSWER|ANS)\s*(?:\||:)\s*(?:OPTION\s*)?([ABCD])',
+        caseSensitive: false,
+      ).firstMatch(line);
+
+      if (answerMatch != null && currentQuestion != null) {
+        final letter = answerMatch.group(1)!.toUpperCase();
+
+        currentAnswer = const ['A', 'B', 'C', 'D'].indexOf(letter);
+      }
+    }
+
+    saveQuestion();
+
+    return questions;
   }
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../lesson/models/lesson.dart';
 import '../../lesson/providers/lesson_provider.dart';
+import '../../../services/local_ai_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,9 +20,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    _checkLocalModel();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LessonProvider>().loadLessons();
     });
+  }
+
+  Future<void> _checkLocalModel() async {
+    await LocalAiService.checkModel();
   }
 
   List<Lesson> _filteredLessons(LessonProvider provider) {

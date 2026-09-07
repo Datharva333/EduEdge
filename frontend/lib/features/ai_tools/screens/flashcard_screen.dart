@@ -67,7 +67,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           },
           {
             'front': 'When is the simple present used?',
-            'back': 'For habits, routines, repeated actions, and general truths.',
+            'back':
+                'For habits, routines, repeated actions, and general truths.',
           },
           {
             'front': 'When is the simple past used?',

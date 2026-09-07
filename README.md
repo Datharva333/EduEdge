@@ -1,487 +1,637 @@
 # EduEdge
 
-**EduEdge** is an offline-first AI learning platform for CBSE Class 9–10 students, designed for environments where internet connectivity may be limited or unreliable.
+EduEdge is an **offline-first AI-powered educational application for CBSE Class 9 and 10 students**, designed especially for environments where internet access may be limited, unreliable, or unavailable.
 
-The current MVP combines a **Flutter mobile application**, a **FastAPI backend**, **SQLite**, and a **fully local AI engine** using a quantized GGUF language model.
+The project is being developed with one central objective:
 
-> **Current offline architecture:** the Android application can operate without internet while communicating with the EduEdge backend and AI engine running locally on a laptop/PC. Fully standalone AI inference directly on Android is planned for a later phase.
+> A student should be able to open EduEdge on an Android phone, access educational content, use AI learning assistance, take quizzes, and retain progress without requiring an internet connection, cloud AI service, laptop, or external backend server.
+
+The project originally used a Flutter frontend with a FastAPI/backend-based AI architecture. It has now been significantly reworked toward a **standalone Android architecture with on-device AI inference**.
 
 ---
 
-## Current Features
+## Current Project Status
 
-- User login and registration
-- Backend-powered lesson catalogue
-- Lesson reading
-- AI lesson summarization
-- Topic-focused summaries
-- Lesson-scoped AI chat
-- AI-generated quizzes
-- Flashcards
-- Mind maps
-- Basic progress tracking
-- SQLite local persistence
-- Local LLM inference without external AI APIs
-- Android ↔ local backend communication
+The hardest part of the standalone MVP — **running an actual LLM directly on Android** — is already working.
 
-### Current Demo Content
+### Functional
 
-| ID | Subject | Lesson |
-|---|---|---|
-| 1 | Mathematics | Quadratic Equations |
-| 2 | Science | Is Matter Around Us Pure? |
-| 3 | English | Grammar — Tenses |
+- Local lesson access
+- On-device GGUF model loading
+- Offline AI lesson summarization
+- Offline lesson-scoped Ask AI
+- Multilingual AI responses
+- Quiz UI and scoring system
+- Local AI quiz generation pipeline
+- Quiz parser and local fallback questions
+- Android model import through file picker
+- Model context reset between independent generations
+- Student-facing AI functionality without laptop-side inference
 
-Each lesson is mapped by the backend to its corresponding source JSON inside the AI engine.
+### Still To Be Completed
+
+- Local progress persistence
+- Fully offline/local login or onboarding
+- Improved AI quiz generation reliability
+- Stronger validation of AI-generated quiz answer keys
+- Removal/audit of any remaining runtime internet dependencies
+- Final airplane-mode end-to-end testing
+- UI/UX cleanup and polish
+- Additional lesson content
+- Optional future tools such as flashcards and mind maps
 
 ---
 
 # Architecture
 
-```text
-┌─────────────────────┐
-│   Flutter Frontend  │
-│     Android App     │
-└──────────┬──────────┘
-           │ HTTP
-           ▼
-┌─────────────────────┐
-│   FastAPI Backend   │
-│                     │
-│ • Authentication    │
-│ • Lessons           │
-│ • AI API Bridge     │
-│ • Progress          │
-│ • SQLite            │
-└──────────┬──────────┘
-           │ Local HTTP
-           ▼
-┌─────────────────────┐
-│      AI Engine      │
-│                     │
-│ • Local GGUF LLM    │
-│ • llama.cpp         │
-│ • Lesson JSON       │
-│ • RAG Components    │
-└─────────────────────┘
-```
-
-For example, summarization follows:
+The target standalone student runtime is:
 
 ```text
-Flutter
-   ↓
-POST /api/v1/ai/summarize
-   ↓
-FastAPI receives lessonId
-   ↓
-lessonId → source_filename
-   ↓
-AI Engine loads lesson content
-   ↓
-Local LLM generates summary
-   ↓
-FastAPI
-   ↓
-Flutter UI
+Flutter Android Application
+        |
+        +---- Local Lesson Content
+        |
+        +---- Local Progress Storage
+        |
+        +---- LocalAiService
+                    |
+                    +---- llama_flutter_android
+                                |
+                                +---- Qwen3.5 GGUF
 ```
 
-The frontend never needs to know the internal AI-engine file paths.
+The repository still contains backend and AI-engine components from the earlier architecture.
+
+These components may remain useful for development, future connected features, administration, or experimentation, but:
+
+> The core student experience must not depend on the backend being available.
 
 ---
 
 # Technology Stack
 
-### Frontend
+## Mobile Application
 
 - Flutter
 - Dart
 - Provider
 - GoRouter
-- Dio
-- SharedPreferences
+- Android
 
-### Backend
+## On-Device AI
+
+- `llama_flutter_android`
+- GGUF model format
+- Qwen3.5
+- CPU inference
+- Local prompt grounding using lesson content
+
+## Existing Backend / Reference Architecture
 
 - Python
 - FastAPI
-- SQLAlchemy
 - SQLite
-- JWT authentication
-- Optional PostgreSQL synchronization
+- Existing AI-engine components
 
-### AI Engine
-
-- Python
-- `llama-cpp-python`
-- GGUF local LLM
-- Qwen 2.5 3B Instruct
-- Sentence Transformers
-- Chroma/RAG components
-- JSON-based lesson content
+The backend should not be reintroduced as a requirement for core offline student features.
 
 ---
 
-# Project Structure
+# On-Device Language Model
+
+The current model selected for the standalone MVP is:
 
 ```text
-EduEdge/
-│
-├── frontend/
-│   ├── lib/
-│   │   ├── core/
-│   │   ├── features/
-│   │   └── services/
-│   └── android/
-│
-├── backend/
-│   └── app/
-│       ├── ai_bridge/
-│       ├── config/
-│       ├── database/
-│       ├── models/
-│       ├── repositories/
-│       ├── routers/
-│       ├── schemas/
-│       ├── services/
-│       └── scripts/
-│
-├── ai-engine/
-│   ├── app/
-│   ├── data/raw/
-│   ├── models/
-│   └── api.py
-│
-└── README.md
+Qwen3.5-0.8B-Q4_K_M.gguf
 ```
+
+Approximate size:
+
+```text
+508 MB
+```
+
+Current inference configuration:
+
+```text
+Threads: 4
+Context size: 1024
+GPU layers: 0
+```
+
+Android minimum SDK:
+
+```text
+API 26
+```
+
+Android package:
+
+```text
+com.eduedge.eduedge
+```
+
+GPU/Vulkan acceleration is currently not required.
+
+The model choice has already been benchmarked against other Qwen variants and should be considered **frozen for the MVP** unless a serious blocker is discovered.
 
 ---
 
-# Running EduEdge Locally
+# Model Installation
 
-## 1. Start the AI Engine
+The GGUF model is intentionally **not stored in Git**.
 
-```powershell
-cd ai-engine
+EduEdge includes a model import workflow using the Android file picker.
 
-.\.venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8001
-```
-
-AI health check:
+The selected model is copied into the application's private storage, typically under a path similar to:
 
 ```text
-http://127.0.0.1:8001/health
+/data/user/0/com.eduedge.eduedge/files/models/Qwen3.5-0.8B-Q4_K_M.gguf
 ```
 
-Expected response:
+The actual application path is resolved through `path_provider`.
 
-```json
-{
-  "status": "ok"
-}
+Typical development flow:
+
+```text
+Copy GGUF to phone
+        ↓
+Open EduEdge model import
+        ↓
+Select GGUF
+        ↓
+EduEdge copies it to private storage
+        ↓
+LocalAiService loads the model
 ```
+
+Do not depend on `adb run-as`, `/Android/data/...`, or other developer-only filesystem tricks for the final product workflow.
 
 ---
 
-## 2. Start the Backend
+# Local AI Service
 
-For local development, PostgreSQL synchronization can be disabled:
-
-```powershell
-cd backend
-
-$env:SYNC_ENABLED="false"
-$env:AI_ENGINE_BASE_URL="http://127.0.0.1:8001"
-
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-Backend health:
+The main AI integration is located in:
 
 ```text
-http://127.0.0.1:8000/health
+frontend/lib/services/local_ai_service.dart
 ```
 
-Swagger API documentation:
+The service currently handles:
 
-```text
-http://127.0.0.1:8000/docs
-```
+- locating the local model
+- importing GGUF files
+- checking model availability
+- loading the model
+- local inference
+- context clearing
+- output cleanup
+- lesson summarization
+- lesson-grounded Q&A
+- quiz generation
+- quiz parsing
+- model shutdown and disposal
 
-### Seed Demo Lessons
+A particularly important implementation detail is that the model context is cleared before independent requests.
 
-```powershell
-python -m app.scripts.seed_demo_data
-```
+This prevents previous conversations or generations from contaminating later requests.
+
+Do not remove this behavior without a verified replacement.
 
 ---
 
-## 3. Run the Flutter Application
+# Offline Lesson System
+
+Student-facing lesson content is now available locally.
+
+The standalone lesson flow does not require a backend lesson endpoint for the primary demo path.
+
+Current demo content includes subjects such as:
+
+```text
+Mathematics
+- Quadratic Equations
+
+Science
+- Is Matter Around Us Pure?
+
+English
+- Tenses
+
+Additional local demo lessons are also included.
+```
+
+The current objective is not to build a massive content library.
+
+The priority is to prove that the entire learning flow works reliably offline.
+
+---
+
+# Offline Summarization
+
+Lesson summarization is performed directly on the Android device.
+
+Flow:
+
+```text
+Lesson content
+      ↓
+LocalAiService
+      ↓
+Qwen3.5
+      ↓
+Short lesson summary
+```
+
+The summarization prompt is intentionally compact because the current model context is limited to 1024 tokens.
+
+Lesson text is trimmed before generation where necessary.
+
+The summary feature currently requests short, simple output suitable for Class 9 and 10 students.
+
+This feature is considered functional for the MVP.
+
+---
+
+# Offline Ask AI
+
+Ask AI has been migrated from the earlier backend AI endpoint to the on-device model.
+
+Current flow:
+
+```text
+Selected lesson
+      +
+Student question
+      ↓
+LocalAiService
+      ↓
+Qwen3.5
+      ↓
+Local answer
+```
+
+The model is grounded using the current lesson text.
+
+A useful capability discovered during testing is **multilingual interaction**.
+
+Questions have been successfully tested in languages including English, Hindi and Marathi, and the model is capable of responding in several additional languages.
+
+This behavior should be preserved.
+
+Do not introduce an English-only restriction unless required by a future product decision.
+
+Because the current model is only 0.8B parameters, prompts should remain concise and output sizes should remain controlled.
+
+---
+
+# Quiz System
+
+The quiz interface is functional.
+
+It supports:
+
+- multiple-choice questions
+- four options
+- answer selection
+- correct/incorrect indication
+- next-question navigation
+- final score
+- retry/new quiz
+- offline fallback questions
+
+The current AI quiz pipeline is:
+
+```text
+Lesson
+   ↓
+LocalAiService.generateQuiz()
+   ↓
+Qwen3.5
+   ↓
+Structured text response
+   ↓
+Dart parser
+   ↓
+Quiz questions
+```
+
+The parser validates the basic output format.
+
+---
+
+## Current Quiz Limitation
+
+The 0.8B model is not consistently reliable when asked to generate several complete MCQs in a single generation.
+
+Observed problems have included:
+
+- generating only one question instead of three
+- incomplete structured output
+- copying prompt placeholders
+- academically weak generated questions
+- potentially incorrect answer keys
+
+The application therefore retains curated offline fallback questions.
+
+A generated question must never be trusted merely because its text format parses correctly.
+
+For an educational application:
+
+> Correctness is more important than dynamically generating every question.
+
+---
+
+## Recommended Future Quiz Architecture
+
+A more reliable approach is to generate questions individually:
+
+```text
+Generate Question 1
+        ↓
+Parse + Validate
+        ↓
+Generate Question 2
+        ↓
+Parse + Validate
+        ↓
+Generate Question 3
+        ↓
+Parse + Validate
+        ↓
+Combine Results
+```
+
+If a generated question fails validation, replace only that question with a curated local fallback.
+
+For the MVP, using entirely curated offline questions is also acceptable if required for reliability.
+
+---
+
+# Progress Persistence
+
+Local progress persistence is one of the highest-priority unfinished tasks.
+
+The final standalone app should save information such as:
+
+```text
+lesson completed
+quiz score
+best quiz score
+last opened lesson
+basic student progress
+```
+
+The data must survive application restarts.
+
+For the MVP, a simple implementation using `SharedPreferences` is acceptable.
+
+A heavier database or cloud synchronization system is not required yet.
+
+---
+
+# Authentication / Offline Entry
+
+The final application must not require a backend authentication server simply to access learning features.
+
+The team should implement a local/offline-friendly entry system.
+
+Possible MVP approaches include:
+
+```text
+Local student profile
+Offline onboarding
+Skip login
+Local username/profile
+```
+
+The requirement is:
+
+```text
+Fresh install
+→ no internet
+→ no backend
+→ student can still enter EduEdge
+```
+
+Complex cloud authentication is outside the current MVP scope.
+
+---
+
+# Runtime Internet Dependency Audit
+
+The Flutter application should be tested carefully for hidden runtime network dependencies.
+
+One previously observed issue involved `google_fonts` attempting to fetch fonts at runtime when offline.
+
+The team should verify whether this dependency still exists.
+
+If necessary:
+
+- use system fonts
+- use bundled offline-safe assets
+- remove runtime font fetching
+
+Core screens must not depend on remote fonts, remote images, analytics services, backend APIs, or other network resources.
+
+---
+
+# Running The Project
+
+From the repository root:
 
 ```powershell
 cd frontend
-
 flutter pub get
 flutter analyze
+flutter devices
+flutter run -d YOUR_DEVICE_ID
 ```
 
-Expected:
+If dependencies are already cached and the development PC is offline:
+
+```powershell
+flutter pub get --offline
+```
+
+---
+
+# Standalone MVP Definition Of Done
+
+The final test should be performed with:
 
 ```text
-No issues found!
+Phone Wi-Fi OFF
+Phone mobile data OFF
+Laptop backend OFF
+Laptop AI engine OFF
+No external inference server
 ```
 
-For a physical Android phone connected through USB:
-
-```powershell
-adb reverse tcp:8000 tcp:8000
-```
-
-Then:
-
-```powershell
-flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000
-```
-
-For LAN communication, replace `127.0.0.1` with the backend machine's local IP.
-
-Example:
-
-```powershell
-flutter run --dart-define=API_BASE_URL=http://192.168.1.20:8000
-```
-
----
-
-# Demo Account
+The following workflow should succeed:
 
 ```text
-Email:    student@eduedge.com
-Password: test1234
+Launch EduEdge
+      ↓
+Enter application locally
+      ↓
+Open local lesson
+      ↓
+Read lesson
+      ↓
+Generate local summary
+      ↓
+Ask local AI a question
+      ↓
+Open quiz
+      ↓
+Answer 3 questions
+      ↓
+View score
+      ↓
+Save progress
+      ↓
+Close application
+      ↓
+Reopen application
+      ↓
+Progress still exists
 ```
 
-This account is intended for local development and testing.
+When this flow works reliably, the standalone MVP can be considered complete.
 
 ---
 
-# Important API Endpoints
+# Development Priorities
 
-### Backend
+## P0 — Complete Before MVP Handoff
 
-```http
-GET /health
-```
+1. Local progress persistence
+2. Offline/local authentication or app entry
+3. Safe and reliable quiz behavior
+4. Runtime internet dependency cleanup
+5. Full airplane-mode regression test
 
-```http
-GET /api/v1/lessons
-GET /api/v1/lessons/{lessonId}
-```
+## P1 — Product Quality
 
-### AI Status
+1. Better loading states
+2. Better error handling
+3. Navigation cleanup
+4. UI consistency
+5. Typography/spacing cleanup
+6. Offline model-missing experience
 
-```http
-GET /api/v1/ai/health
-```
+## P2 — Future Development
 
-### Summarization
+- flashcards
+- mind maps
+- recommendations
+- advanced RAG
+- larger lesson library
+- cloud synchronization
+- analytics
+- teacher/admin tools
+- GPU acceleration
+- larger-model experimentation
 
-```http
-POST /api/v1/ai/summarize
-```
-
-Example:
-
-```json
-{
-  "lessonId": "1"
-}
-```
-
-Focused summary:
-
-```json
-{
-  "lessonId": "2",
-  "topic": "Tyndall effect"
-}
-```
-
-### AI Chat
-
-```http
-POST /api/v1/ai/chat
-```
-
-```json
-{
-  "lessonId": "1",
-  "message": "What is the discriminant?"
-}
-```
-
-### Quiz Generation
-
-```http
-POST /api/v1/ai/quiz
-```
-
-```json
-{
-  "lessonId": "2",
-  "num_questions": 5
-}
-```
+P2 work should not delay completion of P0.
 
 ---
 
-# Demo Flow
+# Important Development Rules
+
+Do not replace the working on-device AI architecture with a cloud API.
+
+Do not make core learning features dependent on the backend again.
+
+Do not commit GGUF models.
+
+Do not remove context clearing between independent AI generations.
+
+Preserve multilingual Ask AI.
+
+Keep prompts compact because the model context is currently 1024 tokens.
+
+Validate structured AI output before using it.
+
+Never blindly trust generated academic answer keys.
+
+Prefer curated local fallback content over incorrect generated content.
+
+Avoid unnecessary project-wide rewrites.
+
+Make small, testable changes.
+
+Test important student functionality on a physical Android device.
+
+---
+
+# Git Workflow
+
+The standalone work has been merged into:
 
 ```text
-Login
-  ↓
-Home
-  ↓
-Select Lesson
-  ↓
-Read Lesson
-  ↓
-AI Hub
-  ├── Summarize
-  ├── Ask AI
-  ├── Quiz
-  ├── Flashcards
-  └── Mind Map
-  ↓
-Progress
+main
 ```
 
-Useful test questions:
+`main` should now be treated as the canonical integrated branch.
 
-```text
-Mathematics:
-What is the discriminant?
+For new work:
 
-Science:
-Explain the Tyndall effect.
-
-English:
-When do we use the simple present tense?
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/<task-name>
 ```
+
+After implementation and testing:
+
+```bash
+git add <relevant-files>
+git commit -m "Describe the completed feature"
+git push origin feature/<task-name>
+```
+
+Merge the feature into `main` after verification.
+
+Avoid maintaining multiple long-lived branches containing already-merged work.
 
 ---
 
-# Development Checks
-
-Before pushing significant changes:
-
-### Flutter
-
-```powershell
-cd frontend
-dart format lib
-flutter analyze
-```
-
-### Backend
-
-```powershell
-cd backend
-.\.venv\Scripts\python.exe -m compileall app
-```
-
-### AI Engine
-
-```powershell
-cd ai-engine
-.\.venv\Scripts\python.exe -m py_compile api.py
-```
-
----
-
-# Git Hygiene
+# Do Not Commit
 
 Do not commit:
 
 ```text
-.venv/
+*.gguf
 build/
 .dart_tool/
 .gradle/
+.venv/
+venv/
 __pycache__/
-*.pyc
-*.db
 .env
-*.gguf
-models/
-demo-rag-chroma/
-.eduedge_patch_backup/
+temporary backups
+generated build reports
+local development databases
 ```
 
-Educational JSON content under:
+Always inspect:
 
-```text
-ai-engine/data/raw/
+```bash
+git status
 ```
 
-may be committed when it forms part of the EduEdge lesson library.
+before committing.
 
 ---
 
-# Current Limitations
+# Project Direction
 
-EduEdge is currently an MVP.
+Every future EduEdge feature should be evaluated against this principle:
 
-- AI generation is CPU-bound and can be slow depending on hardware.
-- Fully standalone Android AI inference is not yet implemented.
-- Mobile offline operation currently depends on a local EduEdge laptop/PC.
-- The complete lesson-scoped vector RAG pipeline is still under development.
-- Progress tracking is currently basic.
-- Flashcards and mind maps currently use lightweight lesson-specific content.
-- PostgreSQL synchronization is optional and not required for the local MVP.
-- The lesson catalogue is intentionally small while the main workflow is stabilized.
+> Can this help a student learn effectively when their Android phone is the only computing device available and internet access cannot be assumed?
 
----
+The immediate objective is not to maximize the number of features.
 
-# Current Development Status
-
-Active development branch:
-
-```text
-feature/real-summarize
-```
-
-Current focus:
-
-```text
-Real Summarization
-        ↓
-Lesson-Scoped AI Chat
-        ↓
-AI Quiz Generation
-        ↓
-Maths / Science / English Integration
-        ↓
-Cross-Machine Testing
-        ↓
-Stable Offline MVP
-```
-
-The immediate goal is a reliable student workflow:
-
-```text
-Select Lesson
-→ Read
-→ Summarize
-→ Ask Questions
-→ Take Quiz
-→ Review
-→ Track Progress
-```
-
-The project currently prioritizes **stability, correctness, offline usability, and complete end-to-end functionality** over adding unnecessary features.
-
----
-
-## License
-
-License information will be added once finalized.
+The objective is to make the existing offline learning experience reliable, coherent, and genuinely usable.

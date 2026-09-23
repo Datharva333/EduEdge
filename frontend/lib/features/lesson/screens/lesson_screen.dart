@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/network/api_exception.dart';
+import '../../../services/local_storage_service.dart';
 import '../models/lesson.dart';
 import '../providers/lesson_provider.dart';
 
@@ -39,6 +40,7 @@ class _LessonScreenState extends State<LessonScreen> {
         _loading = false;
         _errorMessage = null;
       });
+      LocalStorageService.setLastOpenedLesson(widget.lessonId);
       return;
     }
 
@@ -54,6 +56,7 @@ class _LessonScreenState extends State<LessonScreen> {
         _lesson = lesson;
         _loading = false;
       });
+      LocalStorageService.setLastOpenedLesson(widget.lessonId);
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() {

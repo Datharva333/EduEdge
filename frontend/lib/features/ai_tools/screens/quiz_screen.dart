@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../services/local_ai_service.dart';
+import '../../../services/local_storage_service.dart';
 import '../../../services/mock_service.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -172,6 +173,11 @@ class _QuizScreenState extends State<QuizScreen> {
       });
     } else {
       setState(() => _done = true);
+      LocalStorageService.saveQuizResult(
+        lessonId: widget.lessonId,
+        score: _score,
+        total: _questions.length,
+      );
     }
   }
 

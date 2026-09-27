@@ -529,6 +529,157 @@ $content
     return questions.take(3).toList();
   }
 
+  /// Generates ONE multiple-choice question from the lesson, instead of
+  /// asking the 0.8B model for 3 questions in a single generation (which
+  /// is unreliable -- see generateQuiz() above). Returns null if the
+  /// model's output doesn't parse into a single valid question; callers
+  /// are expected to fall back to a curated question for that slot.
+  ///
+  /// This does NOT throw on failure -- a failed single-question generation
+  /// is an expected, routine outcome with this model size, not an error.
+  static Future<Map<String, dynamic>?> generateSingleQuestion(
+    String lessonText, {
+    List<String> avoidQuestions = const [],
+  }) async {
+    var content = lessonText.trim();
+
+    if (content.length > 1200) {
+      content = content.substring(0, 1200);
+
+      final lastSpace = content.lastIndexOf(' ');
+
+      if (lastSpace > 900) {
+        content = content.substring(0, lastSpace);
+      }
+    }
+
+    final avoidBlock = avoidQuestions.isEmpty
+        ? ''
+        : '''
+
+Do not repeat or closely resemble these already-used questions:
+${avoidQuestions.map((q) => '- $q').join('\n')}
+''';
+
+    final prompt =
+        '''
+Create exactly 1 multiple-choice question from this CBSE lesson.
+
+Requirements:
+- The question must be a real question about the lesson.
+- Use only facts stated in the lesson.
+- The question must have exactly 4 options.
+- Exactly one option must be correct.
+- Keep the question and options short.
+- Do not explain the answer.
+- Do not use Markdown.
+- Never write "Question text".
+- Never write "First option", "Second option", "Third option", or "Fourth option".
+- Replace every field with actual lesson content.
+$avoidBlock
+Output the question exactly like this structure, and nothing else:
+
+Q|actual question?
+A|actual answer choice
+B|actual answer choice
+C|actual answer choice
+D|actual answer choice
+ANSWER|A
+
+LESSON:
+$content
+''';
+
+    String result;
+
+    try {
+      result = await generateComplete(prompt, maxTokens: 90);
+    } catch (error) {
+      debugPrint('SINGLE QUESTION GENERATION FAILED: $error');
+      return null;
+    }
+
+    debugPrint('');
+    debugPrint('=============== SINGLE QUESTION RAW OUTPUT =====');
+    debugPrint(result);
+    debugPrint('================================================');
+
+    final parsed = _parseQuiz(result);
+
+    if (parsed.isEmpty) {
+      return null;
+    }
+
+    final question = parsed.first;
+
+    if (!validateQuestion(question)) {
+      return null;
+    }
+
+    return question;
+  }
+
+  /// Academic/structural safety check for one parsed question.
+  ///
+  /// IMPORTANT: this only proves the question is *structurally* usable
+  /// (nonempty, 4 unique options, valid answer index, no placeholder
+  /// text left over from the prompt template). It does NOT prove the
+  /// question is academically correct -- the model can still produce a
+  /// structurally valid question with a wrong answer key or a nonsense
+  /// distractor. There is no reliable on-device way to verify academic
+  /// correctness for an 0.8B model, which is exactly why curated
+  /// fallback questions exist: prefer a fallback over an unverifiable
+  /// "successfully parsed" AI question whenever there is any doubt.
+  static bool validateQuestion(Map<String, dynamic> question) {
+    final text = (question['q'] as String?)?.trim() ?? '';
+    final options = (question['options'] as List?)?.cast<String>() ?? [];
+    final answer = question['answer'] as int?;
+
+    if (text.isEmpty || text.length < 8) {
+      return false;
+    }
+
+    final lowerText = text.toLowerCase();
+    if (lowerText.contains('question text') ||
+        lowerText.contains('actual question')) {
+      return false;
+    }
+
+    if (options.length != 4) {
+      return false;
+    }
+
+    final seen = <String>{};
+    for (final option in options) {
+      final trimmed = option.trim();
+
+      if (trimmed.isEmpty) {
+        return false;
+      }
+
+      final lower = trimmed.toLowerCase();
+      if (lower.contains('first option') ||
+          lower.contains('second option') ||
+          lower.contains('third option') ||
+          lower.contains('fourth option') ||
+          lower.contains('actual answer choice')) {
+        return false;
+      }
+
+      // Reject duplicate options (case-insensitive) -- a quiz where two
+      // choices are identical text is never a fair/valid question.
+      if (!seen.add(lower)) {
+        return false;
+      }
+    }
+
+    if (answer == null || answer < 0 || answer > 3) {
+      return false;
+    }
+
+    return true;
+  }
+
   static List<Map<String, dynamic>> _parseQuiz(String text) {
     final questions = <Map<String, dynamic>>[];
 

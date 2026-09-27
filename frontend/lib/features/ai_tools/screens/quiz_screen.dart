@@ -36,7 +36,49 @@ class _QuizScreenState extends State<QuizScreen> {
       _done = false;
     });
 
-    final questions = _getMockQuestions(widget.lessonId);
+    final curated = _getMockQuestions(widget.lessonId);
+
+    final lesson = MockService.lessons.firstWhere(
+      (l) => l['id'] == widget.lessonId,
+      orElse: () => MockService.lessons.first,
+    );
+    final lessonContent = lesson['content']?.toString().trim() ?? '';
+
+    final questions = <Map<String, dynamic>>[];
+    final usedQuestionTexts = <String>[];
+
+    // One question at a time: attempt AI generation for each curated slot,
+    // validate it, and fall back to the curated question for that slot on
+    // any failure. This is deliberately more conservative than asking the
+    // 0.8B model for a whole quiz in one generation, which is unreliable.
+    // A wrong AI answer key is worse than a static fallback question, so
+    // any doubt falls back.
+    for (var i = 0; i < curated.length; i++) {
+      Map<String, dynamic>? aiQuestion;
+
+      if (lessonContent.isNotEmpty) {
+        try {
+          aiQuestion = await LocalAiService.generateSingleQuestion(
+            lessonContent,
+            avoidQuestions: usedQuestionTexts,
+          );
+        } catch (_) {
+          aiQuestion = null;
+        }
+      }
+
+      if (aiQuestion != null) {
+        questions.add(aiQuestion);
+        usedQuestionTexts.add(aiQuestion['q'] as String);
+      } else {
+        questions.add(curated[i]);
+        usedQuestionTexts.add(curated[i]['q'] as String);
+      }
+
+      if (!mounted) {
+        return;
+      }
+    }
 
     if (!mounted) {
       return;
